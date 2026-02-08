@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const Registration = () => {
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -20,13 +22,31 @@ const Registration = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.firstName || !form.email) {
       toast.error("Please fill in all required fields.");
       return;
     }
-    toast.success("Registration submitted! We'll be in touch soon.");
+
+    setLoading(true);
+    const { error } = await supabase.from("members").insert({
+      first_name: form.firstName,
+      last_name: form.lastName || null,
+      email: form.email,
+      phone: form.phone || null,
+      date_of_birth: form.dob || null,
+      experience_level: form.experience || null,
+      message: form.message || null,
+    });
+    setLoading(false);
+
+    if (error) {
+      toast.error("Registration failed. Please try again.");
+      return;
+    }
+
+    toast.success("Registration submitted! Welcome to the club!");
     setForm({ firstName: "", lastName: "", email: "", phone: "", dob: "", experience: "", message: "" });
   };
 
@@ -81,9 +101,10 @@ const Registration = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground font-display tracking-wider uppercase py-3 rounded hover:brightness-110 transition"
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground font-display tracking-wider uppercase py-3 rounded hover:brightness-110 transition disabled:opacity-50"
           >
-            Submit Registration
+            {loading ? "Submitting..." : "Submit Registration"}
           </button>
         </form>
       </div>
