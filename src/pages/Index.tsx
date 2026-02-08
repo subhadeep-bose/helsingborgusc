@@ -1,6 +1,33 @@
 import { Link } from "react-router-dom";
-import { Calendar, Users, Trophy, ArrowRight } from "lucide-react";
+import { Calendar, Users, Trophy, ArrowRight, Megaphone, Clock } from "lucide-react";
 import heroImage from "@/assets/hero-cricket.jpg";
+
+const news = [
+  {
+    date: "Feb 5, 2026",
+    title: "Season 2026 Registration Now Open",
+    summary: "Sign up today and secure your spot for the upcoming cricket season. Early bird members get a free club t-shirt!",
+    tag: "Registration",
+  },
+  {
+    date: "Jan 28, 2026",
+    title: "New Indoor Training Facility Partnership",
+    summary: "We've partnered with Helsingborg Sports Hall for indoor net sessions during the winter months. Training continues rain or shine!",
+    tag: "Facility",
+  },
+  {
+    date: "Jan 15, 2026",
+    title: "Annual General Meeting — March 2026",
+    summary: "The AGM will be held on March 8th at Helsingborg Community Centre. All members are encouraged to attend and vote on club matters.",
+    tag: "Club News",
+  },
+  {
+    date: "Dec 20, 2025",
+    title: "End of Season Awards Night Recap",
+    summary: "Congratulations to all our award winners! Check out the gallery for photos from a fantastic evening celebrating our 2025 achievements.",
+    tag: "Events",
+  },
+];
 
 const features = [
   {
@@ -85,7 +112,42 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* News & Announcements */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center gap-3 mb-12">
+            <Megaphone size={28} className="text-primary" />
+            <h2 className="font-display text-3xl md:text-4xl text-foreground tracking-wide">
+              News & <span className="gold-accent">Announcements</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {news.map((item, i) => (
+              <div
+                key={i}
+                className="bg-card border border-border rounded-lg p-6 hover:shadow-md transition group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-xs font-display uppercase tracking-wider bg-primary/10 text-primary px-2.5 py-1 rounded">
+                    {item.tag}
+                  </span>
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock size={12} /> {item.date}
+                  </span>
+                </div>
+                <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  {item.summary}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       <section className="py-20 bg-primary">
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-display text-3xl md:text-4xl text-primary-foreground tracking-wide">
