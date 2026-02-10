@@ -13,6 +13,7 @@ import Schedule from "./pages/Schedule";
 import Gallery from "./pages/Gallery";
 import Auth from "./pages/Auth";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
+import AdminMembers from "./pages/AdminMembers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+              <Route path="/admin/members" element={<AdminMembers />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
