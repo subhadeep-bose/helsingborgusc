@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Newspaper } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Newspaper, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const links = [
@@ -50,16 +50,28 @@ const Navbar = () => {
             </Link>
           ))}
           {isAdmin && (
-            <Link
-              to="/admin/announcements"
-              className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
-                location.pathname === "/admin/announcements"
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
-              }`}
-            >
-              <Newspaper size={14} /> News
-            </Link>
+            <>
+              <Link
+                to="/admin/announcements"
+                className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+                  location.pathname === "/admin/announcements"
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                }`}
+              >
+                <Newspaper size={14} /> News
+              </Link>
+              <Link
+                to="/admin/members"
+                className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+                  location.pathname === "/admin/members"
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                }`}
+              >
+                <Users size={14} /> Members
+              </Link>
+            </>
           )}
           {user ? (
             <button
@@ -106,13 +118,22 @@ const Navbar = () => {
             </Link>
           ))}
           {isAdmin && (
-            <Link
-              to="/admin/announcements"
-              onClick={() => setOpen(false)}
-              className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
-            >
-              📰 Manage News
-            </Link>
+            <>
+              <Link
+                to="/admin/announcements"
+                onClick={() => setOpen(false)}
+                className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
+              >
+                📰 Manage News
+              </Link>
+              <Link
+                to="/admin/members"
+                onClick={() => setOpen(false)}
+                className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
+              >
+                👥 Manage Members
+              </Link>
+            </>
           )}
           {user ? (
             <button
