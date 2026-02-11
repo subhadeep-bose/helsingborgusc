@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminMembers from "./pages/AdminMembers";
 import NotFound from "./pages/NotFound";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin/announcements" element={<AdminAnnouncements />} />
               <Route path="/admin/members" element={<AdminMembers />} />
+              <Route path="/privacy" element={<Privacy />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

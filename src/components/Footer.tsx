@@ -17,6 +17,7 @@ const Footer = () => (
             <Link to="/registration" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Join Us</Link>
             <Link to="/schedule" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Training Schedule</Link>
             <Link to="/gallery" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Gallery</Link>
+            <Link to="/privacy" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Privacy Policy</Link>
           </div>
         </div>
         <div>
