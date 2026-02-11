@@ -5,9 +5,12 @@ import PageHeader from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 
 const Registration = () => {
   const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState(false);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -26,6 +29,10 @@ const Registration = () => {
     e.preventDefault();
     if (!form.firstName || !form.email) {
       toast.error("Please fill in all required fields.");
+      return;
+    }
+    if (!consent) {
+      toast.error("Please agree to the privacy policy before registering.");
       return;
     }
 
@@ -48,6 +55,7 @@ const Registration = () => {
 
     toast.success("Registration submitted! Welcome to the club!");
     setForm({ firstName: "", lastName: "", email: "", phone: "", dob: "", experience: "", message: "" });
+    setConsent(false);
   };
 
   return (
@@ -98,6 +106,21 @@ const Registration = () => {
           <div className="space-y-2">
             <Label htmlFor="message">Anything else we should know?</Label>
             <Textarea id="message" name="message" value={form.message} onChange={handleChange} rows={3} />
+          </div>
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="consent"
+              checked={consent}
+              onCheckedChange={(checked) => setConsent(checked === true)}
+              className="mt-0.5"
+            />
+            <Label htmlFor="consent" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+              I agree to the{" "}
+              <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                Privacy Policy
+              </Link>{" "}
+              and consent to my data being processed as described. *
+            </Label>
           </div>
           <button
             type="submit"
