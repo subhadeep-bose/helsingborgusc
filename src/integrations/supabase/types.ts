@@ -47,6 +47,66 @@ export type Database = {
         }
         Relationships: []
       }
+      board_members: {
+        Row: {
+          bio: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          role: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          role: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          role?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gallery_images: {
+        Row: {
+          alt: string
+          created_at: string
+          id: string
+          sort_order: number | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          alt?: string
+          created_at?: string
+          id?: string
+          sort_order?: number | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          alt?: string
+          created_at?: string
+          id?: string
+          sort_order?: number | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           date_of_birth: string | null
@@ -80,6 +140,45 @@ export type Database = {
           message?: string | null
           phone?: string | null
           registered_at?: string
+        }
+        Relationships: []
+      }
+      schedule_entries: {
+        Row: {
+          category: string
+          created_at: string
+          day: string
+          event_date: string | null
+          id: string
+          location: string
+          sort_order: number | null
+          time: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          day: string
+          event_date?: string | null
+          id?: string
+          location: string
+          sort_order?: number | null
+          time: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          day?: string
+          event_date?: string | null
+          id?: string
+          location?: string
+          sort_order?: number | null
+          time?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
