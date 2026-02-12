@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,8 +20,27 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
-  }, [user, navigate]);
+    if (!user) return;
+    // Check if user is a registered member
+    const checkMembership = async () => {
+      const { data } = await supabase
+        .from("members")
+        .select("id")
+        .eq("email", user.email ?? "")
+        .maybeSingle();
+      if (!data) {
+        toast({
+          title: "Access denied",
+          description: "You must be a registered member to log in. Please register first.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+      navigate("/", { replace: true });
+    };
+    checkMembership();
+  }, [user, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,12 +50,36 @@ const Auth = () => {
       return;
     }
     setSubmitting(true);
-    const { error } = isLogin ? await signIn(email, password) : await signUp(email, password);
-    setSubmitting(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else if (!isLogin) {
-      toast({ title: "Account created", description: "Check your email to confirm your account." });
+
+    if (isLogin) {
+      // Check membership before attempting login
+      const { data: member } = await supabase
+        .from("members")
+        .select("id")
+        .eq("email", email.trim())
+        .maybeSingle();
+      if (!member) {
+        toast({
+          title: "Access denied",
+          description: "You must be a registered member to log in. Please register first via the Join Us page.",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+      const { error } = await signIn(email, password);
+      setSubmitting(false);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      }
+    } else {
+      const { error } = await signUp(email, password);
+      setSubmitting(false);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Account created", description: "Check your email to confirm your account." });
+      }
     }
   };
 
@@ -46,7 +90,7 @@ const Auth = () => {
           {isLogin ? "Board Login" : "Create Account"}
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-8">
-          {isLogin ? "Sign in to manage the club" : "Register a new board account"}
+          {isLogin ? "Sign in to manage the club (members only)" : "Register a new board account"}
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

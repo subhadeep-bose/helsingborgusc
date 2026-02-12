@@ -14,6 +14,9 @@ import Gallery from "./pages/Gallery";
 import Auth from "./pages/Auth";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
 import AdminMembers from "./pages/AdminMembers";
+import AdminBoard from "./pages/AdminBoard";
+import AdminSchedule from "./pages/AdminSchedule";
+import AdminGallery from "./pages/AdminGallery";
 import NotFound from "./pages/NotFound";
 import Privacy from "./pages/Privacy";
 
@@ -37,6 +40,9 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin/announcements" element={<AdminAnnouncements />} />
               <Route path="/admin/members" element={<AdminMembers />} />
+              <Route path="/admin/board" element={<AdminBoard />} />
+              <Route path="/admin/schedule" element={<AdminSchedule />} />
+              <Route path="/admin/gallery" element={<AdminGallery />} />
               <Route path="/privacy" element={<Privacy />} />
             </Route>
             <Route path="*" element={<NotFound />} />

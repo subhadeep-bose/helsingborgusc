@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Newspaper, Users } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Newspaper, Users, LayoutDashboard, Calendar, Image } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const links = [
@@ -10,6 +10,14 @@ const links = [
   { to: "/board", label: "Board" },
   { to: "/schedule", label: "Schedule" },
   { to: "/gallery", label: "Gallery" },
+];
+
+const adminLinks = [
+  { to: "/admin/announcements", label: "News", icon: Newspaper },
+  { to: "/admin/members", label: "Members", icon: Users },
+  { to: "/admin/board", label: "Board", icon: LayoutDashboard },
+  { to: "/admin/schedule", label: "Schedule", icon: Calendar },
+  { to: "/admin/gallery", label: "Gallery", icon: Image },
 ];
 
 const Navbar = () => {
@@ -49,30 +57,20 @@ const Navbar = () => {
               {l.label}
             </Link>
           ))}
-          {isAdmin && (
-            <>
+          {isAdmin &&
+            adminLinks.map((l) => (
               <Link
-                to="/admin/announcements"
-                className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
-                  location.pathname === "/admin/announcements"
+                key={l.to}
+                to={l.to}
+                className={`px-3 py-2 rounded font-body text-xs font-medium transition-colors inline-flex items-center gap-1 ${
+                  location.pathname === l.to
                     ? "bg-secondary text-secondary-foreground"
                     : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
                 }`}
               >
-                <Newspaper size={14} /> News
+                <l.icon size={13} /> {l.label}
               </Link>
-              <Link
-                to="/admin/members"
-                className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
-                  location.pathname === "/admin/members"
-                    ? "bg-secondary text-secondary-foreground"
-                    : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
-                }`}
-              >
-                <Users size={14} /> Members
-              </Link>
-            </>
-          )}
+            ))}
           {user ? (
             <button
               onClick={() => signOut()}
@@ -119,20 +117,17 @@ const Navbar = () => {
           ))}
           {isAdmin && (
             <>
-              <Link
-                to="/admin/announcements"
-                onClick={() => setOpen(false)}
-                className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
-              >
-                📰 Manage News
-              </Link>
-              <Link
-                to="/admin/members"
-                onClick={() => setOpen(false)}
-                className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
-              >
-                👥 Manage Members
-              </Link>
+              <div className="px-6 py-2 text-xs text-primary-foreground/50 uppercase tracking-wider font-display">Admin</div>
+              {adminLinks.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setOpen(false)}
+                  className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
+                >
+                  {l.label}
+                </Link>
+              ))}
             </>
           )}
           {user ? (
