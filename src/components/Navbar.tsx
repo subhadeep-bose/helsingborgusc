@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Newspaper, Users, LayoutDashboard, Calendar, Image } from "lucide-react";
+import { Menu, X, LogIn, LogOut, ChevronDown, Newspaper, Users, LayoutDashboard, Calendar, Image } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const links = [
@@ -22,8 +22,29 @@ const adminLinks = [
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const adminRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const { user, isAdmin, signOut } = useAuth();
+
+  // Close admin dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (adminRef.current && !adminRef.current.contains(e.target as Node)) {
+        setAdminOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setAdminOpen(false);
+    setOpen(false);
+  }, [location.pathname]);
+
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-sm">
@@ -57,20 +78,40 @@ const Navbar = () => {
               {l.label}
             </Link>
           ))}
-          {isAdmin &&
-            adminLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={`px-3 py-2 rounded font-body text-xs font-medium transition-colors inline-flex items-center gap-1 ${
-                  location.pathname === l.to
+
+          {/* Admin dropdown */}
+          {isAdmin && (
+            <div ref={adminRef} className="relative">
+              <button
+                onClick={() => setAdminOpen(!adminOpen)}
+                className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+                  isAdminRoute
                     ? "bg-secondary text-secondary-foreground"
                     : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
                 }`}
               >
-                <l.icon size={13} /> {l.label}
-              </Link>
-            ))}
+                Admin <ChevronDown size={14} className={`transition-transform ${adminOpen ? "rotate-180" : ""}`} />
+              </button>
+              {adminOpen && (
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-border bg-card shadow-lg z-50 py-1">
+                  {adminLinks.map((l) => (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      className={`flex items-center gap-2 px-4 py-2.5 text-sm font-body transition-colors ${
+                        location.pathname === l.to
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <l.icon size={15} className="shrink-0" /> {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {user ? (
             <button
               onClick={() => signOut()}
@@ -105,7 +146,6 @@ const Navbar = () => {
             <Link
               key={l.to}
               to={l.to}
-              onClick={() => setOpen(false)}
               className={`block px-6 py-3 font-body text-sm transition-colors ${
                 location.pathname === l.to
                   ? "bg-secondary text-secondary-foreground"
@@ -122,8 +162,11 @@ const Navbar = () => {
                 <Link
                   key={l.to}
                   to={l.to}
-                  onClick={() => setOpen(false)}
-                  className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
+                  className={`block px-6 py-3 font-body text-sm transition-colors ${
+                    location.pathname === l.to
+                      ? "bg-secondary text-secondary-foreground"
+                      : "text-primary-foreground/80 hover:bg-primary-foreground/10"
+                  }`}
                 >
                   {l.label}
                 </Link>
@@ -132,7 +175,7 @@ const Navbar = () => {
           )}
           {user ? (
             <button
-              onClick={() => { signOut(); setOpen(false); }}
+              onClick={() => signOut()}
               className="block w-full text-left px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
             >
               Sign Out
@@ -140,7 +183,6 @@ const Navbar = () => {
           ) : (
             <Link
               to="/auth"
-              onClick={() => setOpen(false)}
               className="block px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
             >
               Login
