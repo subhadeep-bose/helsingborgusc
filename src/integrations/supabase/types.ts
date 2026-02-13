@@ -118,6 +118,7 @@ export type Database = {
           message: string | null
           phone: string | null
           registered_at: string
+          status: string
         }
         Insert: {
           date_of_birth?: string | null
@@ -129,6 +130,7 @@ export type Database = {
           message?: string | null
           phone?: string | null
           registered_at?: string
+          status?: string
         }
         Update: {
           date_of_birth?: string | null
@@ -140,6 +142,7 @@ export type Database = {
           message?: string | null
           phone?: string | null
           registered_at?: string
+          status?: string
         }
         Relationships: []
       }
