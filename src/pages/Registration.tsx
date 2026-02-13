@@ -53,7 +53,7 @@ const Registration = () => {
       return;
     }
 
-    toast.success("Registration submitted! Welcome to the club!");
+    toast.success("Registration submitted! Your application is pending admin approval.");
     setForm({ firstName: "", lastName: "", email: "", phone: "", dob: "", experience: "", message: "" });
     setConsent(false);
   };

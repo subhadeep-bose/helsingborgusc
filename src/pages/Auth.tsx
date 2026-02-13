@@ -25,13 +25,19 @@ const Auth = () => {
     const checkMembership = async () => {
       const { data } = await supabase
         .from("members")
-        .select("id")
+        .select("id, status")
         .eq("email", user.email ?? "")
         .maybeSingle();
       if (!data) {
         toast({
           title: "Access denied",
           description: "You must be a registered member to log in. Please register first.",
+          variant: "destructive",
+        });
+      } else if (data.status !== "approved") {
+        toast({
+          title: "Pending approval",
+          description: "Your membership is still pending admin approval.",
           variant: "destructive",
         });
         await supabase.auth.signOut();
@@ -55,13 +61,19 @@ const Auth = () => {
       // Check membership before attempting login
       const { data: member } = await supabase
         .from("members")
-        .select("id")
+        .select("id, status")
         .eq("email", email.trim())
         .maybeSingle();
       if (!member) {
         toast({
           title: "Access denied",
           description: "You must be a registered member to log in. Please register first via the Join Us page.",
+          variant: "destructive",
+        });
+      } else if (member.status !== "approved") {
+        toast({
+          title: "Pending approval",
+          description: "Your membership is still pending admin approval. Please wait for confirmation.",
           variant: "destructive",
         });
         setSubmitting(false);

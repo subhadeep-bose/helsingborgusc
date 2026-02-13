@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Shield, ShieldOff, Pencil, X, Check } from "lucide-react";
+import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle, Clock } from "lucide-react";
 
 interface Member {
   id: string;
@@ -13,6 +13,7 @@ interface Member {
   phone: string | null;
   experience_level: string | null;
   registered_at: string;
+  status: string;
 }
 
 interface UserRole {
@@ -29,6 +30,7 @@ const AdminMembers = () => {
   const [fetching, setFetching] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ first_name: "", last_name: "", experience_level: "" });
+  const [tab, setTab] = useState<"pending" | "approved" | "rejected">("pending");
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) navigate("/auth", { replace: true });
@@ -36,7 +38,7 @@ const AdminMembers = () => {
 
   const fetchData = async () => {
     const [membersRes, rolesRes] = await Promise.all([
-      supabase.from("members").select("id, first_name, last_name, email, phone, experience_level, registered_at").order("registered_at", { ascending: false }),
+      supabase.from("members").select("id, first_name, last_name, email, phone, experience_level, registered_at, status").order("registered_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     setMembers(membersRes.data ?? []);
@@ -44,14 +46,18 @@ const AdminMembers = () => {
     setFetching(false);
   };
 
-  useEffect(() => {
-    if (isAdmin) fetchData();
-  }, [isAdmin]);
+  useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("members").delete().eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Member removed" }); fetchData(); }
+  };
+
+  const handleStatusChange = async (id: string, status: string) => {
+    const { error } = await supabase.from("members").update({ status }).eq("id", id);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: status === "approved" ? "Member approved!" : "Member rejected" }); fetchData(); }
   };
 
   const startEdit = (m: Member) => {
@@ -67,17 +73,6 @@ const AdminMembers = () => {
     }).eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Updated" }); setEditingId(null); fetchData(); }
-  };
-
-  const toggleRole = async (email: string, memberName: string) => {
-    // Note: user_roles links to auth users by user_id, not member email.
-    // For this demo, we search by email match in a simplified way.
-    // In production, you'd link members to auth users properly.
-    const { data: authUsers } = await supabase.from("user_roles").select("user_id, role");
-    
-    // We need to find the auth user by email - use a workaround
-    // Check if there's already a role for any user and toggle based on that
-    toast({ title: "Note", description: `Role management requires linking members to auth accounts. Use the admin panel to assign roles by user ID.` });
   };
 
   const assignAdmin = async (userId: string) => {
@@ -98,7 +93,8 @@ const AdminMembers = () => {
     return <div className="min-h-screen flex items-center justify-center pt-20 text-muted-foreground">Loading…</div>;
   }
 
-  const adminUserIds = new Set(roles.filter(r => r.role === "admin").map(r => r.user_id));
+  const filtered = members.filter(m => m.status === tab);
+  const pendingCount = members.filter(m => m.status === "pending").length;
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-16">
@@ -107,14 +103,14 @@ const AdminMembers = () => {
           Manage <span className="gold-accent">Members</span>
         </h1>
 
-        {/* Role Management Section */}
+        {/* Role Management */}
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
           <h2 className="font-display text-xl text-foreground mb-4">Admin Role Management</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Assign or remove admin privileges for authenticated users. Enter the user ID from the auth system.
+            Assign or remove admin privileges for authenticated users.
           </p>
           <RoleAssigner onAssign={assignAdmin} />
-          {roles.length > 0 && (
+          {roles.filter(r => r.role === "admin").length > 0 && (
             <div className="mt-4 space-y-2">
               <p className="text-sm font-medium text-foreground">Current admins:</p>
               {roles.filter(r => r.role === "admin").map(r => (
@@ -131,6 +127,28 @@ const AdminMembers = () => {
           )}
         </div>
 
+        {/* Status Tabs */}
+        <div className="flex gap-2 mb-6">
+          {(["pending", "approved", "rejected"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2 rounded font-display text-sm tracking-wider uppercase transition-colors ${
+                tab === t
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {t}
+              {t === "pending" && pendingCount > 0 && (
+                <span className="ml-2 bg-destructive text-destructive-foreground text-xs rounded-full px-2 py-0.5">
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Members Table */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
@@ -140,15 +158,15 @@ const AdminMembers = () => {
                   <th className="text-left px-4 py-3 font-display text-foreground">Name</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Email</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Level</th>
-                  <th className="text-left px-4 py-3 font-display text-foreground">Joined</th>
+                  <th className="text-left px-4 py-3 font-display text-foreground">Applied</th>
                   <th className="text-right px-4 py-3 font-display text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {members.length === 0 && (
-                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No members yet.</td></tr>
+                {filtered.length === 0 && (
+                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No {tab} members.</td></tr>
                 )}
-                {members.map((m) => (
+                {filtered.map((m) => (
                   <tr key={m.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition">
                     <td className="px-4 py-3">
                       {editingId === m.id ? (
@@ -180,6 +198,26 @@ const AdminMembers = () => {
                           </>
                         ) : (
                           <>
+                            {m.status === "pending" && (
+                              <>
+                                <button onClick={() => handleStatusChange(m.id, "approved")} className="p-1.5 rounded hover:bg-primary/10 transition" aria-label="Approve" title="Approve">
+                                  <CheckCircle size={16} className="text-primary" />
+                                </button>
+                                <button onClick={() => handleStatusChange(m.id, "rejected")} className="p-1.5 rounded hover:bg-destructive/10 transition" aria-label="Reject" title="Reject">
+                                  <XCircle size={16} className="text-destructive" />
+                                </button>
+                              </>
+                            )}
+                            {m.status === "rejected" && (
+                              <button onClick={() => handleStatusChange(m.id, "approved")} className="p-1.5 rounded hover:bg-primary/10 transition" aria-label="Approve" title="Approve">
+                                <CheckCircle size={16} className="text-primary" />
+                              </button>
+                            )}
+                            {m.status === "approved" && (
+                              <button onClick={() => handleStatusChange(m.id, "rejected")} className="p-1.5 rounded hover:bg-destructive/10 transition" aria-label="Reject" title="Revoke">
+                                <XCircle size={16} className="text-destructive" />
+                              </button>
+                            )}
                             <button onClick={() => startEdit(m)} className="p-1.5 rounded hover:bg-muted transition" aria-label="Edit"><Pencil size={14} className="text-muted-foreground" /></button>
                             <button onClick={() => handleDelete(m.id)} className="p-1.5 rounded hover:bg-destructive/10 transition" aria-label="Delete"><Trash2 size={14} className="text-destructive" /></button>
                           </>
