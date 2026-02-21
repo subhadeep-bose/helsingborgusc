@@ -21,20 +21,26 @@ const Auth = () => {
 
   useEffect(() => {
     if (!user) return;
-    // Check if user is a registered member
-    const checkMembership = async () => {
-      const { data } = await supabase
+    // Check if user is a registered member AND a board member
+    const checkAccess = async () => {
+      // 1. Check membership
+      const { data: member } = await supabase
         .from("members")
-        .select("id, status")
+        .select("id, status, user_id")
         .eq("email", user.email ?? "")
         .maybeSingle();
-      if (!data) {
+
+      if (!member) {
         toast({
           title: "Access denied",
           description: "You must be a registered member to log in. Please register first.",
           variant: "destructive",
         });
-      } else if (data.status !== "approved") {
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (member.status !== "approved") {
         toast({
           title: "Pending approval",
           description: "Your membership is still pending admin approval.",
@@ -43,9 +49,43 @@ const Auth = () => {
         await supabase.auth.signOut();
         return;
       }
+
+      // 2. Link user_id to member record if not already linked
+      if (!member.user_id) {
+        await supabase
+          .from("members")
+          .update({ user_id: user.id })
+          .eq("id", member.id);
+      }
+
+      // 3. Check board membership
+      const { data: boardMember } = await supabase
+        .from("board_members")
+        .select("id, user_id, member_id")
+        .eq("member_id", member.id)
+        .maybeSingle();
+
+      if (!boardMember) {
+        toast({
+          title: "Access restricted",
+          description: "Only board members can log in to the management area.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      // 4. Link user_id to board_member record if not already linked
+      if (!boardMember.user_id) {
+        await supabase
+          .from("board_members")
+          .update({ user_id: user.id })
+          .eq("id", boardMember.id);
+      }
+
       navigate("/", { replace: true });
     };
-    checkMembership();
+    checkAccess();
   }, [user, navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,7 +98,7 @@ const Auth = () => {
     setSubmitting(true);
 
     if (isLogin) {
-      // Check membership before attempting login
+      // Check membership + board membership before attempting login
       const { data: member } = await supabase
         .from("members")
         .select("id, status")
@@ -70,7 +110,10 @@ const Auth = () => {
           description: "You must be a registered member to log in. Please register first via the Join Us page.",
           variant: "destructive",
         });
-      } else if (member.status !== "approved") {
+        setSubmitting(false);
+        return;
+      }
+      if (member.status !== "approved") {
         toast({
           title: "Pending approval",
           description: "Your membership is still pending admin approval. Please wait for confirmation.",
@@ -79,6 +122,23 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
+
+      // Check board membership by member_id
+      const { data: boardMember } = await supabase
+        .from("board_members")
+        .select("id")
+        .eq("member_id", member.id)
+        .maybeSingle();
+      if (!boardMember) {
+        toast({
+          title: "Access restricted",
+          description: "Only board members can log in. Contact the club administration if you believe this is an error.",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await signIn(email, password);
       setSubmitting(false);
       if (error) {
@@ -102,7 +162,7 @@ const Auth = () => {
           {isLogin ? "Board Login" : "Create Account"}
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-8">
-          {isLogin ? "Sign in to manage the club (members only)" : "Register a new board account"}
+          {isLogin ? "Sign in to manage the club (board members only)" : "Register a new board account"}
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

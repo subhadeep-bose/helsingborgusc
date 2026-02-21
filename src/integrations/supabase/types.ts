@@ -53,32 +53,46 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          member_id: string | null
           name: string
           role: string
           sort_order: number | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           bio?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          member_id?: string | null
           name: string
           role: string
           sort_order?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           bio?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          member_id?: string | null
           name?: string
           role?: string
           sort_order?: number | null
           updated_at?: string
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "board_members_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       gallery_images: {
         Row: {
@@ -119,6 +133,7 @@ export type Database = {
           phone: string | null
           registered_at: string
           status: string
+          user_id: string | null
         }
         Insert: {
           date_of_birth?: string | null
@@ -131,6 +146,7 @@ export type Database = {
           phone?: string | null
           registered_at?: string
           status?: string
+          user_id?: string | null
         }
         Update: {
           date_of_birth?: string | null
@@ -143,6 +159,7 @@ export type Database = {
           phone?: string | null
           registered_at?: string
           status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -211,6 +228,12 @@ export type Database = {
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_board_member: {
+        Args: {
           _user_id: string
         }
         Returns: boolean

@@ -14,6 +14,7 @@ interface Member {
   experience_level: string | null;
   registered_at: string;
   status: string;
+  user_id: string | null;
 }
 
 interface UserRole {
@@ -38,7 +39,7 @@ const AdminMembers = () => {
 
   const fetchData = async () => {
     const [membersRes, rolesRes] = await Promise.all([
-      supabase.from("members").select("id, first_name, last_name, email, phone, experience_level, registered_at, status").order("registered_at", { ascending: false }),
+      supabase.from("members").select("id, first_name, last_name, email, phone, experience_level, registered_at, status, user_id").order("registered_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     setMembers(membersRes.data ?? []);
@@ -158,13 +159,14 @@ const AdminMembers = () => {
                   <th className="text-left px-4 py-3 font-display text-foreground">Name</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Email</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Level</th>
+                  <th className="text-left px-4 py-3 font-display text-foreground">Linked</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Applied</th>
                   <th className="text-right px-4 py-3 font-display text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">No {tab} members.</td></tr>
+                  <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">No {tab} members.</td></tr>
                 )}
                 {filtered.map((m) => (
                   <tr key={m.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition">
@@ -184,6 +186,13 @@ const AdminMembers = () => {
                         <input value={editForm.experience_level} onChange={e => setEditForm(p => ({ ...p, experience_level: e.target.value }))} className="w-24 rounded border border-input bg-background px-1.5 py-0.5 text-xs" placeholder="Level" />
                       ) : (
                         <span className="text-muted-foreground">{m.experience_level ?? "—"}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {m.user_id ? (
+                        <span className="text-xs text-primary" title={m.user_id}>✓ Auth</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">

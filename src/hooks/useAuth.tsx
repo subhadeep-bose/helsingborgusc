@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isBoardMember: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -18,6 +19,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isBoardMember, setIsBoardMember] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const checkAdmin = async (userId: string) => {
@@ -30,6 +32,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAdmin(!!data);
   };
 
+  const checkBoardMember = async (userId: string) => {
+    const { data } = await supabase
+      .from("board_members")
+      .select("id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    setIsBoardMember(!!data);
+  };
+
+  const checkRoles = async (userId: string) => {
+    await Promise.all([checkAdmin(userId), checkBoardMember(userId)]);
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -38,11 +53,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          checkAdmin(session.user.id).then(() => {
+          checkRoles(session.user.id).then(() => {
             if (mounted) setLoading(false);
           });
         } else {
           setIsAdmin(false);
+          setIsBoardMember(false);
           setLoading(false);
         }
       }
@@ -52,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await checkAdmin(session.user.id);
+        await checkRoles(session.user.id);
       }
       if (mounted) setLoading(false);
     });
@@ -82,7 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isBoardMember, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
