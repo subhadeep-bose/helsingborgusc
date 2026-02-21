@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -13,18 +12,13 @@ interface GalleryImage {
 }
 
 const AdminGallery = () => {
-  const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [fetching, setFetching] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [alt, setAlt] = useState("");
-
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) navigate("/auth", { replace: true });
-  }, [user, isAdmin, loading, navigate]);
 
   const fetchImages = async () => {
     const { data } = await supabase.from("gallery_images").select("*").order("sort_order");

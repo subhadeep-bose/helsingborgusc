@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import { Clock, MapPin, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import SEO from "@/components/SEO";
 
 interface ScheduleEntry {
   id: string;
@@ -36,6 +37,7 @@ const Schedule = () => {
   if (loading) {
     return (
       <div>
+        <SEO title="Training Schedule" description="View training times and upcoming cricket events at Helsingborg United SC." path="/schedule" />
         <PageHeader title="Training Schedule" subtitle="Weekends year-round · Weekday sessions in summer · Upcoming events" />
         <div className="container mx-auto px-4 py-16 text-center text-muted-foreground">Loading…</div>
       </div>
@@ -44,6 +46,7 @@ const Schedule = () => {
 
   return (
     <div>
+      <SEO title="Training Schedule" description="View training times and upcoming cricket events at Helsingborg United SC." path="/schedule" />
       <PageHeader title="Training Schedule" subtitle="Weekends year-round · Weekday sessions in summer · Upcoming events" />
       <div className="container mx-auto px-4 py-16">
         <h2 className="font-display text-2xl text-foreground mb-6">Weekly Training</h2>
@@ -73,7 +76,7 @@ const Schedule = () => {
               }`}
             >
               <span className="font-display text-sm gold-accent min-w-[120px]">
-                {u.event_date ? new Date(u.event_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
+                {u.event_date ? new Date(u.event_date + "T00:00:00").toLocaleDateString("sv-SE", { month: "short", day: "numeric", year: "numeric" }) : ""}
               </span>
               <span className="font-body text-foreground flex-1">{u.type}</span>
               <span className="text-sm text-muted-foreground flex items-center gap-1">

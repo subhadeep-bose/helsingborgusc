@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
+import SEO from "@/components/SEO";
 
 interface BoardMember {
   id: string;
@@ -25,6 +26,7 @@ const Board = () => {
 
   return (
     <div>
+      <SEO title="Board Members" description="Meet the board members leading Helsingborg United Sports Club." path="/board" />
       <PageHeader title="Board Members" subtitle="The team behind Helsingborg United SC" />
       <div className="container mx-auto px-4 py-16">
         {loading ? (

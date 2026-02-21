@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -22,8 +21,7 @@ interface MemberOption {
 }
 
 const AdminBoard = () => {
-  const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
@@ -32,10 +30,6 @@ const AdminBoard = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", role: "", sort_order: 0, member_id: "" });
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) navigate("/auth", { replace: true });
-  }, [user, isAdmin, loading, navigate]);
 
   const fetchMembers = async () => {
     const [boardRes, memberRes] = await Promise.all([

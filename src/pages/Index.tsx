@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Calendar, Users, Trophy, ArrowRight, Megaphone, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import SEO from "@/components/SEO";
 import heroImage from "@/assets/hero-cricket.jpg";
 
 const features = [
@@ -44,6 +45,7 @@ const Index = () => {
 
   return (
     <div className="font-body">
+      <SEO path="/" />
       {/* Hero */}
       <section className="relative min-h-[90vh] flex items-center">
         <img
@@ -129,7 +131,7 @@ const Index = () => {
                     </span>
                     <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Clock size={12} />{" "}
-                      {new Date(item.published_at).toLocaleDateString("en-US", {
+                      {new Date(item.published_at).toLocaleDateString("sv-SE", {
                         month: "short",
                         day: "numeric",
                         year: "numeric",

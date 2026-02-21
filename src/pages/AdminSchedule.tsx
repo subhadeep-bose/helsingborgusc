@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,8 +16,7 @@ interface ScheduleEntry {
 }
 
 const AdminSchedule = () => {
-  const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [entries, setEntries] = useState<ScheduleEntry[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -26,10 +24,6 @@ const AdminSchedule = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ day: "", time: "", type: "", location: "", category: "weekly", event_date: "", sort_order: 0 });
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) navigate("/auth", { replace: true });
-  }, [user, isAdmin, loading, navigate]);
 
   const fetchEntries = async () => {
     const { data } = await supabase.from("schedule_entries").select("*").order("category").order("sort_order");
