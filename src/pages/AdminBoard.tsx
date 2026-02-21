@@ -9,8 +9,6 @@ interface BoardMember {
   id: string;
   name: string;
   role: string;
-  email: string | null;
-  bio: string | null;
   sort_order: number;
   member_id: string | null;
   user_id: string | null;
@@ -32,7 +30,7 @@ const AdminBoard = () => {
   const [fetching, setFetching] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", role: "", email: "", bio: "", sort_order: 0, member_id: "" });
+  const [form, setForm] = useState({ name: "", role: "", sort_order: 0, member_id: "" });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -52,7 +50,7 @@ const AdminBoard = () => {
   useEffect(() => { if (isAdmin) fetchMembers(); }, [isAdmin]);
 
   const resetForm = () => {
-    setForm({ name: "", role: "", email: "", bio: "", sort_order: 0, member_id: "" });
+    setForm({ name: "", role: "", sort_order: 0, member_id: "" });
     setEditId(null);
     setShowForm(false);
   };
@@ -67,8 +65,6 @@ const AdminBoard = () => {
     const payload = {
       name: form.name.trim(),
       role: form.role.trim(),
-      email: form.email.trim() || null,
-      bio: form.bio.trim() || null,
       sort_order: form.sort_order,
       member_id: form.member_id || null,
     };
@@ -94,7 +90,7 @@ const AdminBoard = () => {
 
   const startEdit = (m: BoardMember) => {
     setEditId(m.id);
-    setForm({ name: m.name, role: m.role, email: m.email ?? "", bio: m.bio ?? "", sort_order: m.sort_order, member_id: m.member_id ?? "" });
+    setForm({ name: m.name, role: m.role, sort_order: m.sort_order, member_id: m.member_id ?? "" });
     setShowForm(true);
   };
 
@@ -127,10 +123,6 @@ const AdminBoard = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Email</label>
-              <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
-            </div>
-            <div>
               <label className="block text-sm font-medium text-foreground mb-1">Link to Member</label>
               <select
                 value={form.member_id}
@@ -141,7 +133,6 @@ const AdminBoard = () => {
                     member_id: e.target.value,
                     ...(selectedMember ? {
                       name: `${selectedMember.first_name} ${selectedMember.last_name ?? ""}`.trim(),
-                      email: selectedMember.email,
                     } : {}),
                   }));
                 }}
@@ -155,10 +146,6 @@ const AdminBoard = () => {
                 ))}
               </select>
               <p className="text-xs text-muted-foreground mt-1">Linking a member shares the same identity across members, board, and auth.</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Bio</label>
-              <textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))} rows={3} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Sort Order</label>
@@ -180,7 +167,6 @@ const AdminBoard = () => {
               <div>
                 <h3 className="font-display text-lg text-foreground">{m.name}</h3>
                 <p className="text-sm gold-accent font-display">{m.role}</p>
-                {m.bio && <p className="text-sm text-muted-foreground mt-1">{m.bio}</p>}
                 {m.member_id && (
                   <p className="text-xs text-primary/70 mt-1 flex items-center gap-1">
                     ✓ Linked to member

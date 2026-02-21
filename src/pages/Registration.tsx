@@ -17,7 +17,9 @@ const Registration = () => {
     email: "",
     phone: "",
     dob: "",
+    placeOfBirth: "",
     experience: "",
+    referralSource: "",
     message: "",
   });
 
@@ -43,7 +45,9 @@ const Registration = () => {
       email: form.email,
       phone: form.phone || null,
       date_of_birth: form.dob || null,
+      place_of_birth: form.placeOfBirth || null,
       experience_level: form.experience || null,
+      referral_source: form.referralSource || null,
       message: form.message || null,
     });
     setLoading(false);
@@ -54,7 +58,7 @@ const Registration = () => {
     }
 
     toast.success("Registration submitted! Your application is pending admin approval.");
-    setForm({ firstName: "", lastName: "", email: "", phone: "", dob: "", experience: "", message: "" });
+    setForm({ firstName: "", lastName: "", email: "", phone: "", dob: "", placeOfBirth: "", experience: "", referralSource: "", message: "" });
     setConsent(false);
   };
 
@@ -88,6 +92,10 @@ const Registration = () => {
             </div>
           </div>
           <div className="space-y-2">
+            <Label htmlFor="placeOfBirth">Place of Birth</Label>
+            <Input id="placeOfBirth" name="placeOfBirth" placeholder="e.g. Malmö, Sweden" value={form.placeOfBirth} onChange={handleChange} />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="experience">Cricket Experience</Label>
             <select
               id="experience"
@@ -101,6 +109,25 @@ const Registration = () => {
               <option value="casual">Casual — played a few times</option>
               <option value="intermediate">Intermediate — regular player</option>
               <option value="advanced">Advanced — competitive experience</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="referralSource">How did you hear about us?</Label>
+            <select
+              id="referralSource"
+              name="referralSource"
+              value={form.referralSource}
+              onChange={handleChange}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-body"
+            >
+              <option value="">Select an option</option>
+              <option value="friend">Friend or family</option>
+              <option value="social_media">Social media</option>
+              <option value="search_engine">Google / search engine</option>
+              <option value="event">Saw us at an event</option>
+              <option value="flyer">Flyer or poster</option>
+              <option value="news">News article</option>
+              <option value="other">Other</option>
             </select>
           </div>
           <div className="space-y-2">

@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
-import { Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BoardMember {
   id: string;
   name: string;
   role: string;
-  email: string | null;
-  bio: string | null;
 }
 
 const Board = () => {
@@ -18,7 +15,7 @@ const Board = () => {
   useEffect(() => {
     supabase
       .from("board_members")
-      .select("id, name, role, email, bio")
+      .select("id, name, role")
       .order("sort_order")
       .then(({ data }) => {
         setBoard(data ?? []);
@@ -46,15 +43,6 @@ const Board = () => {
                 </div>
                 <h3 className="font-display text-xl text-foreground">{b.name}</h3>
                 <p className="text-sm gold-accent font-display tracking-wide uppercase mt-1">{b.role}</p>
-                {b.bio && <p className="text-muted-foreground text-sm mt-3 font-body leading-relaxed">{b.bio}</p>}
-                {b.email && (
-                  <a
-                    href={`mailto:${b.email}`}
-                    className="inline-flex items-center gap-1 text-primary text-sm mt-4 hover:underline font-body"
-                  >
-                    <Mail size={14} /> {b.email}
-                  </a>
-                )}
               </div>
             ))}
           </div>
