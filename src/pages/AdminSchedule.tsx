@@ -87,7 +87,7 @@ const AdminSchedule = () => {
 
   return (
     <AdminLayout
-      title="Schedule"
+      title="Manage"
       accent="Schedule"
       loading={fetching}
       maxWidth="max-w-3xl"

@@ -91,7 +91,7 @@ const AdminBoard = () => {
 
   return (
     <AdminLayout
-      title="Board"
+      title="Manage"
       accent="Board"
       loading={fetching}
       maxWidth="max-w-3xl"

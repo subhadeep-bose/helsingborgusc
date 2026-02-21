@@ -93,7 +93,7 @@ const AdminMembers = () => {
   const pendingCount = members.filter(m => m.status === "pending").length;
 
   return (
-    <AdminLayout title="Members" accent="Members" loading={fetching}>
+    <AdminLayout title="Manage" accent="Members" loading={fetching}>
 
         {/* Role Management */}
         <div className="bg-card border border-border rounded-lg p-6 mb-8">

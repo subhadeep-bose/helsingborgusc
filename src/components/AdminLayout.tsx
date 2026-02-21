@@ -11,7 +11,7 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout = ({
-  title: _title,
+  title,
   accent,
   children,
   loading = false,
@@ -33,7 +33,7 @@ const AdminLayout = ({
       <div className={`container mx-auto px-4 ${maxWidth}`}>
         <div className="flex items-center justify-between mb-8">
           <h1 className="font-display text-3xl text-foreground tracking-wide">
-            Manage <span className="gold-accent">{accent}</span>
+            {title} <span className="gold-accent">{accent}</span>
           </h1>
           {headerAction}
         </div>
