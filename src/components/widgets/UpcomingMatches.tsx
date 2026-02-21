@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { CalendarDays, MapPin, Tv } from "lucide-react";
 import { CricketBallLoader } from "@/components/widgets";
 import type { CricketMatch } from "@/services/cricketApi";
-import { getUpcomingIndiaMatches, isApiConfigured } from "@/services/cricketApi";
+import { getUpcomingIndiaMatches, isApiConfigured, getTrackedSeriesNames } from "@/services/cricketApi";
 
 const formatMatchType = (type: string) => {
   switch (type?.toLowerCase()) {
@@ -110,12 +110,20 @@ const UpcomingMatches = ({ limit = 10, compact = false }: UpcomingMatchesProps) 
   }
 
   if (matches.length === 0) {
+    const seriesNames = getTrackedSeriesNames();
     return (
       <div className="bg-card border border-border rounded-xl p-6 text-center">
         <CalendarDays size={20} className="text-muted-foreground mx-auto mb-2" />
         <p className="text-sm text-muted-foreground">
-          No upcoming India matches scheduled at the moment.
+          No upcoming India matches found in the API at the moment.
         </p>
+        {seriesNames.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Tracking: <span className="text-primary font-medium">{seriesNames.join(", ")}</span>.
+            <br />
+            Match data may appear closer to the scheduled dates.
+          </p>
+        )}
       </div>
     );
   }
@@ -235,6 +243,11 @@ const UpcomingMatches = ({ limit = 10, compact = false }: UpcomingMatchesProps) 
                 <span className="flex items-center gap-1 truncate">
                   <MapPin size={12} />
                   {m.venue}
+                </span>
+              )}
+              {m.series && (
+                <span className="text-[10px] font-display text-primary bg-primary/10 px-2 py-0.5 rounded">
+                  {m.series}
                 </span>
               )}
             </div>
