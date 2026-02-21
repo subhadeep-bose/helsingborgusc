@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
+import SEO from "@/components/SEO";
 
 const Registration = () => {
   const [loading, setLoading] = useState(false);
@@ -64,6 +65,7 @@ const Registration = () => {
 
   return (
     <div>
+      <SEO title="Join Us" description="Register to become a member of Helsingborg United Sports Club." path="/registration" />
       <PageHeader title="Join Us" subtitle="Register to become a member of Helsingborg United SC" />
       <div className="container mx-auto px-4 py-16 max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">

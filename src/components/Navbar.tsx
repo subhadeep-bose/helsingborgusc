@@ -47,7 +47,7 @@ const Navbar = () => {
   const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-sm">
+    <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-sm">
       <div className="container mx-auto flex items-center justify-between py-3 px-4">
         <Link to="/" className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-display font-bold text-secondary-foreground text-lg">
@@ -84,6 +84,9 @@ const Navbar = () => {
             <div ref={adminRef} className="relative">
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
+                onKeyDown={(e) => { if (e.key === "Escape") setAdminOpen(false); }}
+                aria-expanded={adminOpen}
+                aria-haspopup="true"
                 className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
                   isAdminRoute
                     ? "bg-secondary text-secondary-foreground"
@@ -93,7 +96,7 @@ const Navbar = () => {
                 Admin <ChevronDown size={14} className={`transition-transform ${adminOpen ? "rotate-180" : ""}`} />
               </button>
               {adminOpen && (
-                <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-border bg-card shadow-lg z-50 py-1">
+                <div role="menu" className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-border bg-card shadow-lg z-50 py-1">
                   {adminLinks.map((l) => (
                     <Link
                       key={l.to}
@@ -134,6 +137,7 @@ const Navbar = () => {
           className="md:hidden text-primary-foreground"
           onClick={() => setOpen(!open)}
           aria-label="Toggle menu"
+          aria-expanded={open}
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>

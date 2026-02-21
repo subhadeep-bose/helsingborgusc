@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -23,8 +22,7 @@ interface UserRole {
 }
 
 const AdminMembers = () => {
-  const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
@@ -32,10 +30,6 @@ const AdminMembers = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ first_name: "", last_name: "", experience_level: "" });
   const [tab, setTab] = useState<"pending" | "approved" | "rejected">("pending");
-
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) navigate("/auth", { replace: true });
-  }, [user, isAdmin, loading, navigate]);
 
   const fetchData = async () => {
     const [membersRes, rolesRes] = await Promise.all([
@@ -196,7 +190,7 @@ const AdminMembers = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(m.registered_at).toLocaleDateString("en-SE", { year: "numeric", month: "short", day: "numeric" })}
+                      {new Date(m.registered_at).toLocaleDateString("sv-SE", { year: "numeric", month: "short", day: "numeric" })}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">

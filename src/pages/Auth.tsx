@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255),
@@ -157,6 +158,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 pt-20">
+      <SEO title="Board Login" description="Sign in to the Helsingborg United SC management area." path="/auth" />
       <div className="w-full max-w-md bg-card border border-border rounded-lg p-8 shadow-sm">
         <h1 className="font-display text-3xl text-foreground text-center tracking-wide mb-2">
           {isLogin ? "Board Login" : "Create Account"}

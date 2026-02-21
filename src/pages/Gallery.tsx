@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
+import SEO from "@/components/SEO";
 
 // Static fallback images
 import gallery1 from "@/assets/gallery-1.jpg";
@@ -50,6 +51,7 @@ const Gallery = () => {
 
   return (
     <div>
+      <SEO title="Gallery" description="Photos and moments from Helsingborg United Sports Club." path="/gallery" />
       <PageHeader title="Gallery" subtitle="Moments from the pitch" />
       <div className="container mx-auto px-4 py-16">
         {loading ? (

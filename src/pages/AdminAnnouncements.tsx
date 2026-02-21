@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -21,8 +20,7 @@ interface Announcement {
 }
 
 const AdminAnnouncements = () => {
-  const { user, isAdmin, loading } = useAuth();
-  const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { toast } = useToast();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -32,12 +30,6 @@ const AdminAnnouncements = () => {
   const [summary, setSummary] = useState("");
   const [tag, setTag] = useState("Club News");
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      navigate("/auth", { replace: true });
-    }
-  }, [user, isAdmin, loading, navigate]);
 
   const fetchAnnouncements = async () => {
     const { data } = await supabase
@@ -180,7 +172,7 @@ const AdminAnnouncements = () => {
                     {a.tag}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(a.published_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    {new Date(a.published_at).toLocaleDateString("sv-SE", { month: "short", day: "numeric", year: "numeric" })}
                   </span>
                 </div>
                 <h3 className="font-display text-lg text-foreground">{a.title}</h3>

@@ -3,8 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Registration from "./pages/Registration";
 import Members from "./pages/Members";
@@ -23,34 +25,36 @@ import Privacy from "./pages/Privacy";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/registration" element={<Registration />} />
-              <Route path="/members" element={<Members />} />
-              <Route path="/board" element={<Board />} />
-              <Route path="/schedule" element={<Schedule />} />
-              <Route path="/gallery" element={<Gallery />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-              <Route path="/admin/members" element={<AdminMembers />} />
-              <Route path="/admin/board" element={<AdminBoard />} />
-              <Route path="/admin/schedule" element={<AdminSchedule />} />
-              <Route path="/admin/gallery" element={<AdminGallery />} />
-              <Route path="/privacy" element={<Privacy />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/registration" element={<Registration />} />
+                <Route path="/members" element={<Members />} />
+                <Route path="/board" element={<Board />} />
+                <Route path="/schedule" element={<Schedule />} />
+                <Route path="/gallery" element={<Gallery />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/admin/announcements" element={<ProtectedRoute requireAdmin><AdminAnnouncements /></ProtectedRoute>} />
+                <Route path="/admin/members" element={<ProtectedRoute requireAdmin><AdminMembers /></ProtectedRoute>} />
+                <Route path="/admin/board" element={<ProtectedRoute requireAdmin><AdminBoard /></ProtectedRoute>} />
+                <Route path="/admin/schedule" element={<ProtectedRoute requireAdmin><AdminSchedule /></ProtectedRoute>} />
+                <Route path="/admin/gallery" element={<ProtectedRoute requireAdmin><AdminGallery /></ProtectedRoute>} />
+                <Route path="/privacy" element={<Privacy />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

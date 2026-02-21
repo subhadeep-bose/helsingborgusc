@@ -1,7 +1,9 @@
 import PageHeader from "@/components/PageHeader";
+import SEO from "@/components/SEO";
 
 const Privacy = () => (
   <div>
+    <SEO title="Privacy Policy" description="GDPR-compliant privacy policy for Helsingborg United Sports Club." path="/privacy" />
     <PageHeader title="Privacy Policy" subtitle="How we handle your personal data — GDPR compliant" />
     <div className="container mx-auto px-4 py-16 max-w-3xl">
       <div className="prose prose-sm max-w-none space-y-8 text-foreground font-body">

@@ -128,7 +128,7 @@ export type Database = {
           place_of_birth: string | null
           referral_source: string | null
           registered_at: string
-          status: string
+          status: Database["public"]["Enums"]["member_status"]
           user_id: string | null
         }
         Insert: {
@@ -143,7 +143,7 @@ export type Database = {
           place_of_birth?: string | null
           referral_source?: string | null
           registered_at?: string
-          status?: string
+          status?: Database["public"]["Enums"]["member_status"]
           user_id?: string | null
         }
         Update: {
@@ -158,7 +158,7 @@ export type Database = {
           place_of_birth?: string | null
           referral_source?: string | null
           registered_at?: string
-          status?: string
+          status?: Database["public"]["Enums"]["member_status"]
           user_id?: string | null
         }
         Relationships: []
@@ -241,6 +241,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      member_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -369,6 +370,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      member_status: ["pending", "approved", "rejected"],
     },
   },
 } as const

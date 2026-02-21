@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PageHeader from "@/components/PageHeader";
 import { User } from "lucide-react";
+import SEO from "@/components/SEO";
 
 interface Member {
   id: string;
@@ -37,6 +38,7 @@ const Members = () => {
 
   return (
     <div>
+      <SEO title="Members" description="Browse the registered members of Helsingborg United Sports Club." path="/members" />
       <PageHeader title="Members" subtitle={`${members.length} registered member${members.length !== 1 ? "s" : ""}`} />
       <div className="container mx-auto px-4 py-16">
         {loading ? (
@@ -61,7 +63,7 @@ const Members = () => {
                   </p>
                   <p className="text-sm text-muted-foreground font-body">
                     {formatRole(m.experience_level)} · Joined{" "}
-                    {new Date(m.registered_at).toLocaleDateString("en-SE", {
+                    {new Date(m.registered_at).toLocaleDateString("sv-SE", {
                       year: "numeric",
                       month: "short",
                     })}
