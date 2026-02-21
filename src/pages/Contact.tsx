@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Turnstile } from "react-turnstile";
-import { Mail, Send, MapPin, Clock } from "lucide-react";
+import { Mail, Send, MapPin, Instagram } from "lucide-react";
 import SEO from "@/components/SEO";
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
@@ -161,13 +161,18 @@ const Contact = () => {
 
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock size={18} className="text-primary" />
+                    <Instagram size={18} className="text-primary" />
                   </div>
                   <div>
-                    <p className="font-display text-sm text-foreground mb-0.5">Training</p>
-                    <p className="text-sm text-muted-foreground">
-                      Sundays, 3:00 – 5:00 PM CET
-                    </p>
+                    <p className="font-display text-sm text-foreground mb-0.5">Instagram</p>
+                    <a
+                      href="https://www.instagram.com/helsingborgunitedsc/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      @helsingborgunitedsc
+                    </a>
                   </div>
                 </div>
               </div>
