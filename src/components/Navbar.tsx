@@ -10,6 +10,7 @@ const links = [
   { to: "/board", label: "Board" },
   { to: "/schedule", label: "Schedule" },
   { to: "/gallery", label: "Gallery" },
+  { to: "/contact", label: "Contact" },
 ];
 
 const adminLinks = [
