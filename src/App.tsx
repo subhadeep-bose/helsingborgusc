@@ -25,6 +25,7 @@ import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
 import Statutes from "./pages/Statutes";
 import FunZone from "./pages/FunZone";
+import CricketLive from "./pages/CricketLive";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/statutes" element={<Statutes />} />
                   <Route path="/fun" element={<FunZone />} />
+                  <Route path="/cricket-live" element={<CricketLive />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

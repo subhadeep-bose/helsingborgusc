@@ -303,6 +303,8 @@ Create a `.env` file in the project root (or set in your hosting provider):
 |---|---|
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anon/public API key |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile CAPTCHA site key (for registration) |
+| `VITE_CRICAPI_KEY` | *(Optional)* CricAPI key for live India cricket scores — [get one free](https://cricapi.com) |
 
 > ⚠️ Never commit your `.env` file. The Supabase anon key is safe for client-side use but should be paired with proper Row-Level Security policies.
 
