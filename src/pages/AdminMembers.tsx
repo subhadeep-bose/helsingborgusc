@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle } from "lucide-react";
+import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle, ChevronDown, Search } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 
 interface Member {
@@ -99,22 +99,48 @@ const AdminMembers = () => {
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
           <h2 className="font-display text-xl text-foreground mb-4">Admin Role Management</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Assign or remove admin privileges for authenticated users.
+            Assign or remove admin privileges for authenticated members.
           </p>
-          <RoleAssigner onAssign={assignAdmin} />
+          <RoleAssigner
+            members={members.filter(m => m.user_id && m.status === "approved")}
+            adminUserIds={roles.filter(r => r.role === "admin").map(r => r.user_id)}
+            onAssign={assignAdmin}
+          />
           {roles.filter(r => r.role === "admin").length > 0 && (
-            <div className="mt-4 space-y-2">
+            <div className="mt-5 space-y-2">
               <p className="text-sm font-medium text-foreground">Current admins:</p>
-              {roles.filter(r => r.role === "admin").map(r => (
-                <div key={r.user_id} className="flex items-center justify-between bg-muted/50 rounded px-3 py-2">
-                  <code className="text-xs text-muted-foreground break-all">{r.user_id}</code>
-                  {r.user_id !== user?.id && (
-                    <button onClick={() => removeAdmin(r.user_id)} className="p-1 rounded hover:bg-destructive/10 transition" aria-label="Remove admin">
-                      <ShieldOff size={14} className="text-destructive" />
-                    </button>
-                  )}
-                </div>
-              ))}
+              {roles.filter(r => r.role === "admin").map(r => {
+                const member = members.find(m => m.user_id === r.user_id);
+                return (
+                  <div key={r.user_id} className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Shield size={14} className="text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {member ? `${member.first_name} ${member.last_name ?? ""}`.trim() : "Unknown user"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {member?.email ?? r.user_id}
+                        </p>
+                      </div>
+                    </div>
+                    {r.user_id !== user?.id && (
+                      <button
+                        onClick={() => removeAdmin(r.user_id)}
+                        className="inline-flex items-center gap-1.5 text-xs font-display tracking-wider uppercase text-destructive hover:bg-destructive/10 px-3 py-1.5 rounded transition"
+                        aria-label="Remove admin"
+                      >
+                        <ShieldOff size={13} /> Remove
+                      </button>
+                    )}
+                    {r.user_id === user?.id && (
+                      <span className="text-xs text-muted-foreground font-display tracking-wider uppercase">You</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -234,22 +260,109 @@ const AdminMembers = () => {
   );
 };
 
-const RoleAssigner = ({ onAssign }: { onAssign: (userId: string) => void }) => {
-  const [userId, setUserId] = useState("");
+const RoleAssigner = ({
+  members,
+  adminUserIds,
+  onAssign,
+}: {
+  members: Member[];
+  adminUserIds: string[];
+  onAssign: (userId: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Only show members who aren't already admins
+  const eligible = members.filter(m => m.user_id && !adminUserIds.includes(m.user_id));
+  const filtered = eligible.filter(m => {
+    const q = search.toLowerCase();
+    const name = `${m.first_name} ${m.last_name ?? ""}`.toLowerCase();
+    return name.includes(q) || m.email.toLowerCase().includes(q);
+  });
+
+  const handleSelect = (m: Member) => {
+    if (m.user_id) {
+      onAssign(m.user_id);
+      setOpen(false);
+      setSearch("");
+    }
+  };
+
+  if (eligible.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground italic">
+        All authenticated members are already admins, or no approved members have linked accounts.
+      </p>
+    );
+  }
+
   return (
-    <div className="flex gap-2">
-      <input
-        value={userId}
-        onChange={e => setUserId(e.target.value)}
-        placeholder="Paste user ID (UUID)"
-        className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      />
+    <div className="relative" ref={ref}>
       <button
-        onClick={() => { if (userId.trim()) { onAssign(userId.trim()); setUserId(""); } }}
-        className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-5 py-2 rounded hover:brightness-110 transition"
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-muted-foreground hover:border-primary/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Shield size={14} /> Assign Admin
+        <span className="flex items-center gap-2">
+          <Shield size={14} className="text-primary" />
+          Select a member to make admin…
+        </span>
+        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1.5 w-full bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+          {/* Search */}
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+            <Search size={14} className="text-muted-foreground shrink-0" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or email…"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              autoFocus
+            />
+          </div>
+
+          {/* List */}
+          <div className="max-h-56 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground text-center">No matching members</p>
+            ) : (
+              filtered.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => handleSelect(m)}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-primary/5 transition"
+                >
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                    <span className="text-xs font-display text-foreground">
+                      {m.first_name.charAt(0).toUpperCase()}
+                      {(m.last_name ?? "").charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-foreground truncate">
+                      {m.first_name} {m.last_name ?? ""}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
