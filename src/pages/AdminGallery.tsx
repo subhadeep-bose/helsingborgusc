@@ -96,7 +96,7 @@ const AdminGallery = () => {
   };
 
   return (
-    <AdminLayout title="Gallery" accent="Gallery" loading={fetching} maxWidth="max-w-4xl">
+    <AdminLayout title="Manage" accent="Gallery" loading={fetching} maxWidth="max-w-4xl">
 
         {/* Upload form */}
         <div className="bg-card border border-border rounded-lg p-6 mb-8">

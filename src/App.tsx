@@ -57,8 +57,8 @@ const App = () => (
                   <Route path="/statutes" element={<Statutes />} />
                   <Route path="/fun" element={<FunZone />} />
                   <Route path="/cricket-live" element={<CricketLive />} />
+                  <Route path="*" element={<NotFound />} />
                 </Route>
-                <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </AuthProvider>

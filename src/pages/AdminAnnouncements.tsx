@@ -101,7 +101,7 @@ const AdminAnnouncements = () => {
 
   return (
     <AdminLayout
-      title="Announcements"
+      title="Manage"
       accent="Announcements"
       loading={fetching}
       maxWidth="max-w-3xl"

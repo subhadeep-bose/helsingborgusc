@@ -21,6 +21,7 @@ const Members = () => {
       const { data, error } = await supabase
         .from("members")
         .select("id, first_name, last_name, experience_level, registered_at")
+        .eq("status", "approved")
         .order("registered_at", { ascending: false });
 
       if (!error && data) {
@@ -31,7 +32,7 @@ const Members = () => {
     fetchMembers();
   }, []);
 
-  const formatRole = (level: string | null) => {
+  const formatExperience = (level: string | null) => {
     if (!level) return "Member";
     return level.charAt(0).toUpperCase() + level.slice(1);
   };
@@ -62,7 +63,7 @@ const Members = () => {
                     {m.first_name} {m.last_name || ""}
                   </p>
                   <p className="text-sm text-muted-foreground font-body">
-                    {formatRole(m.experience_level)} · Joined{" "}
+                    {formatExperience(m.experience_level)} · Joined{" "}
                     {new Date(m.registered_at).toLocaleDateString("sv-SE", {
                       year: "numeric",
                       month: "short",
