@@ -8,6 +8,11 @@
 ALTER TABLE public.members
   ADD COLUMN user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL;
 
+-- 1b. Add place_of_birth and referral_source columns to members
+ALTER TABLE public.members
+  ADD COLUMN place_of_birth TEXT,
+  ADD COLUMN referral_source TEXT;
+
 -- 2. Add member_id column to board_members (links a board seat to a member)
 ALTER TABLE public.board_members
   ADD COLUMN member_id UUID UNIQUE REFERENCES public.members(id) ON DELETE SET NULL;

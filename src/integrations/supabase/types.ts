@@ -131,6 +131,8 @@ export type Database = {
           last_name: string | null
           message: string | null
           phone: string | null
+          place_of_birth: string | null
+          referral_source: string | null
           registered_at: string
           status: string
           user_id: string | null
@@ -144,6 +146,8 @@ export type Database = {
           last_name?: string | null
           message?: string | null
           phone?: string | null
+          place_of_birth?: string | null
+          referral_source?: string | null
           registered_at?: string
           status?: string
           user_id?: string | null
@@ -157,6 +161,8 @@ export type Database = {
           last_name?: string | null
           message?: string | null
           phone?: string | null
+          place_of_birth?: string | null
+          referral_source?: string | null
           registered_at?: string
           status?: string
           user_id?: string | null
