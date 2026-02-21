@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle, ChevronDown, Search } from "lucide-react";
+import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle, ChevronDown, Search, Link2, Link2Off, KeyRound } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 
 interface Member {
@@ -102,7 +102,7 @@ const AdminMembers = () => {
             Assign or remove admin privileges for authenticated members.
           </p>
           <RoleAssigner
-            members={members.filter(m => m.user_id && m.status === "approved")}
+            members={members.filter(m => m.status === "approved")}
             adminUserIds={roles.filter(r => r.role === "admin").map(r => r.user_id)}
             onAssign={assignAdmin}
           />
@@ -271,6 +271,8 @@ const RoleAssigner = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [showManual, setShowManual] = useState(false);
+  const [manualId, setManualId] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -281,9 +283,11 @@ const RoleAssigner = ({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Only show members who aren't already admins
-  const eligible = members.filter(m => m.user_id && !adminUserIds.includes(m.user_id));
-  const filtered = eligible.filter(m => {
+  // Separate linked (can be made admin) from unlinked
+  const nonAdminMembers = members.filter(
+    (m) => !m.user_id || !adminUserIds.includes(m.user_id),
+  );
+  const filtered = nonAdminMembers.filter((m) => {
     const q = search.toLowerCase();
     const name = `${m.first_name} ${m.last_name ?? ""}`.toLowerCase();
     return name.includes(q) || m.email.toLowerCase().includes(q);
@@ -297,72 +301,139 @@ const RoleAssigner = ({
     }
   };
 
-  if (eligible.length === 0) {
-    return (
-      <p className="text-xs text-muted-foreground italic">
-        All authenticated members are already admins, or no approved members have linked accounts.
-      </p>
-    );
-  }
-
   return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-muted-foreground hover:border-primary/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <span className="flex items-center gap-2">
-          <Shield size={14} className="text-primary" />
-          Select a member to make admin…
-        </span>
-        <ChevronDown size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
+    <div className="space-y-3">
+      {/* Dropdown */}
+      <div className="relative" ref={ref}>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="w-full flex items-center justify-between rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-muted-foreground hover:border-primary/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <span className="flex items-center gap-2">
+            <Shield size={14} className="text-primary" />
+            Select a member to make admin…
+          </span>
+          <ChevronDown
+            size={16}
+            className={`transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </button>
 
-      {open && (
-        <div className="absolute z-50 mt-1.5 w-full bg-card border border-border rounded-lg shadow-lg overflow-hidden">
-          {/* Search */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
-            <Search size={14} className="text-muted-foreground shrink-0" />
+        {open && (
+          <div className="absolute z-50 mt-1.5 w-full bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+            {/* Search */}
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+              <Search size={14} className="text-muted-foreground shrink-0" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name or email…"
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                autoFocus
+              />
+            </div>
+
+            {/* List */}
+            <div className="max-h-64 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-muted-foreground text-center">
+                  No matching members
+                </p>
+              ) : (
+                filtered.map((m) => {
+                  const linked = !!m.user_id;
+                  const alreadyAdmin =
+                    linked && adminUserIds.includes(m.user_id!);
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => linked && !alreadyAdmin && handleSelect(m)}
+                      disabled={!linked || alreadyAdmin}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${
+                        linked && !alreadyAdmin
+                          ? "hover:bg-primary/5 cursor-pointer"
+                          : "opacity-60 cursor-not-allowed"
+                      }`}
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                          linked ? "bg-primary/10" : "bg-muted"
+                        }`}
+                      >
+                        <span className="text-xs font-display text-foreground">
+                          {m.first_name.charAt(0).toUpperCase()}
+                          {(m.last_name ?? "").charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-foreground truncate">
+                          {m.first_name} {m.last_name ?? ""}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {m.email}
+                        </p>
+                      </div>
+                      {linked ? (
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-display tracking-wider uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">
+                          <Link2 size={10} /> Linked
+                        </span>
+                      ) : (
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-display tracking-wider uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                          <Link2Off size={10} /> No account
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Info bar */}
+            <div className="px-4 py-2 border-t border-border bg-muted/30">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Only members with a <strong>linked auth account</strong> (signed in at least once) can be made admin.
+                Members showing "No account" need to sign in via the website first.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Manual UUID fallback */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowManual(!showManual)}
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition"
+        >
+          <KeyRound size={12} />
+          {showManual ? "Hide" : "Or assign by user ID (advanced)"}
+        </button>
+        {showManual && (
+          <div className="flex gap-2 mt-2">
             <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or email…"
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              autoFocus
+              value={manualId}
+              onChange={(e) => setManualId(e.target.value)}
+              placeholder="Paste Supabase Auth user ID (UUID)"
+              className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
+            <button
+              type="button"
+              onClick={() => {
+                if (manualId.trim()) {
+                  onAssign(manualId.trim());
+                  setManualId("");
+                }
+              }}
+              className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground font-display text-xs tracking-wider uppercase px-4 py-2 rounded hover:brightness-110 transition"
+            >
+              <Shield size={13} /> Assign
+            </button>
           </div>
-
-          {/* List */}
-          <div className="max-h-56 overflow-y-auto">
-            {filtered.length === 0 ? (
-              <p className="px-4 py-3 text-sm text-muted-foreground text-center">No matching members</p>
-            ) : (
-              filtered.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => handleSelect(m)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-primary/5 transition"
-                >
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <span className="text-xs font-display text-foreground">
-                      {m.first_name.charAt(0).toUpperCase()}
-                      {(m.last_name ?? "").charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm text-foreground truncate">
-                      {m.first_name} {m.last_name ?? ""}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">{m.email}</p>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
