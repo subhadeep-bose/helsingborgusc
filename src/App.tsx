@@ -22,6 +22,7 @@ import AdminSchedule from "./pages/AdminSchedule";
 import AdminGallery from "./pages/AdminGallery";
 import NotFound from "./pages/NotFound";
 import Privacy from "./pages/Privacy";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
                   <Route path="/admin/schedule" element={<ProtectedRoute requireAdmin><AdminSchedule /></ProtectedRoute>} />
                   <Route path="/admin/gallery" element={<ProtectedRoute requireAdmin><AdminGallery /></ProtectedRoute>} />
                   <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/contact" element={<Contact />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

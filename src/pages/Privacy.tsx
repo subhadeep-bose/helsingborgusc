@@ -13,8 +13,8 @@ const Privacy = () => (
           <p className="text-muted-foreground leading-relaxed">
             Helsingborg United Sports Club ("the Club") is the data controller for the personal
             information collected through this website. Contact us at{" "}
-            <a href="mailto:info@helsingborgunited.se" className="text-primary hover:underline">
-              info@helsingborgunited.se
+            <a href="mailto:helsingborgunitedsc@gmail.com" className="text-primary hover:underline">
+              helsingborgunitedsc@gmail.com
             </a>{" "}
             for any data-related enquiries.
           </p>
@@ -110,8 +110,8 @@ const Privacy = () => (
           </ul>
           <p className="text-muted-foreground leading-relaxed mt-2">
             To exercise any of these rights, email{" "}
-            <a href="mailto:info@helsingborgunited.se" className="text-primary hover:underline">
-              info@helsingborgunited.se
+            <a href="mailto:helsingborgunitedsc@gmail.com" className="text-primary hover:underline">
+              helsingborgunitedsc@gmail.com
             </a>.
             We will respond within 30 days.
           </p>
