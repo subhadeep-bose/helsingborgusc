@@ -10,10 +10,10 @@ import {
 } from "@/components/widgets";
 
 const stats = [
-  { label: "Members", value: 60, suffix: "+" },
-  { label: "Training Sessions", value: 200, suffix: "+" },
-  { label: "Matches Played", value: 35 },
-  { label: "Years Active", value: 10, suffix: "+" },
+  { label: "Members", value: 20 },
+  { label: "Training Sessions", value: 1 },
+  { label: "Matches Played", value: 2 },
+  { label: "Years Active", value: 0, suffix: "+" },
 ];
 
 const FunZone = () => {
