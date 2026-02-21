@@ -49,9 +49,7 @@ export type Database = {
       }
       board_members: {
         Row: {
-          bio: string | null
           created_at: string
-          email: string | null
           id: string
           member_id: string | null
           name: string
@@ -61,9 +59,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          bio?: string | null
           created_at?: string
-          email?: string | null
           id?: string
           member_id?: string | null
           name: string
@@ -73,9 +69,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          bio?: string | null
           created_at?: string
-          email?: string | null
           id?: string
           member_id?: string | null
           name?: string
