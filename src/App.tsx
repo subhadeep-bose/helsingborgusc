@@ -23,6 +23,7 @@ import AdminGallery from "./pages/AdminGallery";
 import NotFound from "./pages/NotFound";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
+import Statutes from "./pages/Statutes";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
                   <Route path="/admin/gallery" element={<ProtectedRoute requireAdmin><AdminGallery /></ProtectedRoute>} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/statutes" element={<Statutes />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

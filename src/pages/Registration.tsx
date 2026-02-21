@@ -39,7 +39,7 @@ const Registration = () => {
       return;
     }
     if (!consent) {
-      toast.error("Please agree to the privacy policy before registering.");
+      toast.error("Please agree to the Club Statutes and Privacy Policy before registering.");
       return;
     }
     if (TURNSTILE_SITE_KEY && !captchaToken) {
@@ -153,11 +153,15 @@ const Registration = () => {
               className="mt-0.5"
             />
             <Label htmlFor="consent" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
-              I agree to the{" "}
+              I have read and agree to the{" "}
+              <Link to="/statutes" className="text-primary hover:underline" target="_blank">
+                Club Statutes
+              </Link>{" "}
+              and the{" "}
               <Link to="/privacy" className="text-primary hover:underline" target="_blank">
                 Privacy Policy
-              </Link>{" "}
-              and consent to my data being processed as described. *
+              </Link>
+              , and I consent to my data being processed as described. *
             </Label>
           </div>
 
