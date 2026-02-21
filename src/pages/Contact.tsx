@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Turnstile } from "react-turnstile";
-import { Mail, Send } from "lucide-react";
+import { Mail, Send, MapPin, Clock } from "lucide-react";
 import SEO from "@/components/SEO";
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
@@ -116,97 +116,147 @@ const Contact = () => {
         title="Contact Us"
         subtitle="Have a question? Send us a message"
       />
-      <div className="container mx-auto px-4 py-16 max-w-2xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="md:col-span-1 space-y-4">
-            <div className="flex items-start gap-3">
-              <Mail size={18} className="text-primary mt-0.5 shrink-0" />
+      <div className="container mx-auto px-4 py-16 max-w-5xl">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+          {/* ── Left: Contact Info Card ──────────────────── */}
+          <div className="lg:col-span-2">
+            <div className="bg-card border border-border rounded-2xl p-8 space-y-8 sticky top-24">
               <div>
-                <p className="font-display text-sm text-foreground">Email</p>
-                <a
-                  href="mailto:helsingborgunitedsc@gmail.com"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  helsingborgunitedsc@gmail.com
-                </a>
+                <h2 className="font-display text-xl text-foreground tracking-wide mb-1">
+                  Get in Touch
+                </h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Have questions about membership, training, or anything
+                  cricket-related? We'd love to hear from you.
+                </p>
+              </div>
+
+              <div className="space-y-5">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Mail size={18} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm text-foreground mb-0.5">Email</p>
+                    <a
+                      href="mailto:helsingborgunitedsc@gmail.com"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors break-all"
+                    >
+                      helsingborgunitedsc@gmail.com
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin size={18} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm text-foreground mb-0.5">Location</p>
+                    <p className="text-sm text-muted-foreground">
+                      Helsingborg, Sweden
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Clock size={18} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-display text-sm text-foreground mb-0.5">Training</p>
+                    <p className="text-sm text-muted-foreground">
+                      Sundays, 3:00 – 5:00 PM CET
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-6">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Fill out the form and we'll reply to your email within 48 hours. For urgent matters, email us directly.
+                </p>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Or use the form and we'll reply to your email.
-            </p>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="md:col-span-2 space-y-5"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject *</Label>
-              <Input
-                id="subject"
-                name="subject"
-                value={form.subject}
-                onChange={handleChange}
-                placeholder="e.g. Membership enquiry"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="message">Message *</Label>
-              <Textarea
-                id="message"
-                name="message"
-                value={form.message}
-                onChange={handleChange}
-                rows={5}
-                placeholder="Tell us what's on your mind…"
-                required
-              />
-            </div>
+          {/* ── Right: Contact Form ──────────────────────── */}
+          <div className="lg:col-span-3">
+            <div className="bg-card border border-border rounded-2xl p-8">
+              <h2 className="font-display text-xl text-foreground tracking-wide mb-6">
+                Send a Message
+              </h2>
 
-            {TURNSTILE_SITE_KEY && (
-              <div className="flex justify-center">
-                <Turnstile
-                  sitekey={TURNSTILE_SITE_KEY}
-                  onVerify={(token) => setCaptchaToken(token)}
-                  onExpire={() => setCaptchaToken(null)}
-                  theme="dark"
-                />
-              </div>
-            )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject *</Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    value={form.subject}
+                    onChange={handleChange}
+                    placeholder="e.g. Membership enquiry"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message *</Label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    value={form.message}
+                    onChange={handleChange}
+                    rows={6}
+                    placeholder="Tell us what's on your mind…"
+                    required
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase py-3 rounded hover:brightness-110 transition disabled:opacity-50"
-            >
-              <Send size={16} />
-              {submitting ? "Sending…" : "Send Message"}
-            </button>
-          </form>
+                {TURNSTILE_SITE_KEY && (
+                  <div className="flex justify-center">
+                    <Turnstile
+                      sitekey={TURNSTILE_SITE_KEY}
+                      onVerify={(token) => setCaptchaToken(token)}
+                      onExpire={() => setCaptchaToken(null)}
+                      theme="dark"
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase py-3 rounded-lg hover:brightness-110 transition disabled:opacity-50"
+                >
+                  <Send size={16} />
+                  {submitting ? "Sending…" : "Send Message"}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
