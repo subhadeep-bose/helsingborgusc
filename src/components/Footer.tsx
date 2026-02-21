@@ -8,7 +8,7 @@ const Footer = () => (
         <div>
           <h3 className="font-display text-xl mb-3 gold-accent">Helsingborg United SC</h3>
           <p className="text-primary-foreground/70 text-sm leading-relaxed font-body">
-            Weekend leisure cricket for everyone in Helsingborg, Sweden. Join our community and enjoy the gentleman's game.
+            Leisure cricket for everyone in Helsingborg, Sweden — weekends year-round and weekday sessions in summer. Join our community and enjoy the gentleman's game.
           </p>
         </div>
         <div>

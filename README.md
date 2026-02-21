@@ -1,6 +1,6 @@
 # 🏏 Helsingborg United Sports Club
 
-> Weekend leisure cricket for everyone in Helsingborg, Sweden.
+> Leisure cricket for everyone in Helsingborg, Sweden — weekends year-round, plus weekday sessions in the summer.
 
 A full-stack web application for the **Helsingborg United Sports Club** — managing member registrations, training schedules, club announcements, board information, and a photo gallery. Built with React, TypeScript, and Supabase.
 
