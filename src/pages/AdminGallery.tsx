@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Upload, ImagePlus } from "lucide-react";
+import AdminLayout from "@/components/AdminLayout";
 
 interface GalleryImage {
   id: string;
@@ -28,12 +29,36 @@ const AdminGallery = () => {
 
   useEffect(() => { if (isAdmin) fetchImages(); }, [isAdmin]);
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
   const handleUpload = async () => {
     const files = fileRef.current?.files;
     if (!files || files.length === 0) {
       toast({ title: "Please select a file", variant: "destructive" });
       return;
     }
+
+    // Validate each file before uploading
+    for (const file of Array.from(files)) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: `"${file.name}" is not a supported image format. Use JPEG, PNG, WebP, or GIF.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File too large",
+          description: `"${file.name}" exceeds the 5 MB limit (${(file.size / 1024 / 1024).toFixed(1)} MB).`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setUploading(true);
     for (const file of Array.from(files)) {
       const ext = file.name.split(".").pop();
@@ -70,16 +95,8 @@ const AdminGallery = () => {
     else { toast({ title: "Deleted" }); fetchImages(); }
   };
 
-  if (loading || fetching) {
-    return <div className="min-h-screen flex items-center justify-center pt-20 text-muted-foreground">Loading…</div>;
-  }
-
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <h1 className="font-display text-3xl text-foreground tracking-wide mb-8">
-          Manage <span className="gold-accent">Gallery</span>
-        </h1>
+    <AdminLayout title="Gallery" accent="Gallery" loading={fetching} maxWidth="max-w-4xl">
 
         {/* Upload form */}
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
@@ -93,7 +110,8 @@ const AdminGallery = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Image File(s)</label>
-              <input ref={fileRef} type="file" accept="image/*" multiple className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:brightness-110" />
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:brightness-110" />
+              <p className="text-xs text-muted-foreground mt-1">JPEG, PNG, WebP or GIF — max 5 MB per file.</p>
             </div>
             <button onClick={handleUpload} disabled={uploading} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-6 py-2 rounded hover:brightness-110 transition disabled:opacity-50">
               <Upload size={16} /> {uploading ? "Uploading…" : "Upload"}
@@ -125,8 +143,7 @@ const AdminGallery = () => {
             );
           })}
         </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 

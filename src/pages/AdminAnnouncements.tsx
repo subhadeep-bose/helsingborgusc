@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil } from "lucide-react";
 import { z } from "zod";
+import AdminLayout from "@/components/AdminLayout";
 
 const announcementSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
@@ -20,7 +21,7 @@ interface Announcement {
 }
 
 const AdminAnnouncements = () => {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -96,24 +97,23 @@ const AdminAnnouncements = () => {
     setShowForm(true);
   };
 
-  if (loading || fetching) {
-    return <div className="min-h-screen flex items-center justify-center pt-20 text-muted-foreground">Loading…</div>;
-  }
+  if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display text-3xl text-foreground tracking-wide">
-            Manage <span className="gold-accent">Announcements</span>
-          </h1>
-          <button
-            onClick={() => { resetForm(); setShowForm(!showForm); }}
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-5 py-2 rounded hover:brightness-110 transition"
-          >
-            <Plus size={16} /> New
-          </button>
-        </div>
+    <AdminLayout
+      title="Announcements"
+      accent="Announcements"
+      loading={fetching}
+      maxWidth="max-w-3xl"
+      headerAction={
+        <button
+          onClick={() => { resetForm(); setShowForm(!showForm); }}
+          className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-5 py-2 rounded hover:brightness-110 transition"
+        >
+          <Plus size={16} /> New
+        </button>
+      }
+    >
 
         {showForm && (
           <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 mb-8 space-y-4">
@@ -189,8 +189,7 @@ const AdminAnnouncements = () => {
             </div>
           ))}
         </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 
