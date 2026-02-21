@@ -13,7 +13,10 @@ WHERE id NOT IN (
 ALTER TABLE public.members
   ADD CONSTRAINT members_email_unique UNIQUE (email);
 
--- Step 3: Create the status enum and convert the column
+-- Step 3: Drop the RLS policy that depends on "status"
+DROP POLICY IF EXISTS "Approved members are publicly viewable" ON public.members;
+
+-- Step 4: Create the status enum and convert the column
 CREATE TYPE public.member_status AS ENUM ('pending', 'approved', 'rejected');
 
 ALTER TABLE public.members
@@ -26,5 +29,10 @@ ALTER TABLE public.members
 ALTER TABLE public.members
   ALTER COLUMN status SET DEFAULT 'pending'::public.member_status;
 
--- Step 4: Add index on status for faster filtering
+-- Step 5: Recreate the policy using the new enum type
+CREATE POLICY "Approved members are publicly viewable"
+  ON public.members FOR SELECT
+  USING (status = 'approved'::public.member_status);
+
+-- Step 6: Add index on status for faster filtering
 CREATE INDEX IF NOT EXISTS idx_members_status ON public.members(status);
