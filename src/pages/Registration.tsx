@@ -8,10 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import SEO from "@/components/SEO";
+import { Turnstile } from "react-turnstile";
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "";
 
 const Registration = () => {
   const [loading, setLoading] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -38,6 +42,10 @@ const Registration = () => {
       toast.error("Please agree to the privacy policy before registering.");
       return;
     }
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      toast.error("Please complete the CAPTCHA verification.");
+      return;
+    }
 
     setLoading(true);
     const { error } = await supabase.from("members").insert({
@@ -61,6 +69,7 @@ const Registration = () => {
     toast.success("Registration submitted! Your application is pending admin approval.");
     setForm({ firstName: "", lastName: "", email: "", phone: "", dob: "", placeOfBirth: "", experience: "", referralSource: "", message: "" });
     setConsent(false);
+    setCaptchaToken(null);
   };
 
   return (
@@ -151,6 +160,18 @@ const Registration = () => {
               and consent to my data being processed as described. *
             </Label>
           </div>
+
+          {TURNSTILE_SITE_KEY && (
+            <div className="flex justify-center">
+              <Turnstile
+                sitekey={TURNSTILE_SITE_KEY}
+                onVerify={(token) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken(null)}
+                theme="dark"
+              />
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}

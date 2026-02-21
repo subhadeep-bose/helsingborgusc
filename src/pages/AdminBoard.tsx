@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Trash2, Plus, Pencil } from "lucide-react";
+import AdminLayout from "@/components/AdminLayout";
 
 interface BoardMember {
   id: string;
@@ -88,21 +89,18 @@ const AdminBoard = () => {
     setShowForm(true);
   };
 
-  if (loading || fetching) {
-    return <div className="min-h-screen flex items-center justify-center pt-20 text-muted-foreground">Loading…</div>;
-  }
-
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="font-display text-3xl text-foreground tracking-wide">
-            Manage <span className="gold-accent">Board</span>
-          </h1>
-          <button onClick={() => { resetForm(); setShowForm(!showForm); }} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-5 py-2 rounded hover:brightness-110 transition">
-            <Plus size={16} /> New
-          </button>
-        </div>
+    <AdminLayout
+      title="Board"
+      accent="Board"
+      loading={fetching}
+      maxWidth="max-w-3xl"
+      headerAction={
+        <button onClick={() => { resetForm(); setShowForm(!showForm); }} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-5 py-2 rounded hover:brightness-110 transition">
+          <Plus size={16} /> New
+        </button>
+      }
+    >
 
         {showForm && (
           <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 mb-8 space-y-4">
@@ -174,8 +172,7 @@ const AdminBoard = () => {
             </div>
           ))}
         </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 

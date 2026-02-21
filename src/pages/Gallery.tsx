@@ -20,12 +20,6 @@ const fallbackImages = [
   { src: gallery6, alt: "Stumps at sunset" },
 ];
 
-interface GalleryImage {
-  id: string;
-  alt: string;
-  storage_path: string;
-}
-
 const Gallery = () => {
   const [images, setImages] = useState<{ src: string; alt: string }[]>([]);
   const [loading, setLoading] = useState(true);

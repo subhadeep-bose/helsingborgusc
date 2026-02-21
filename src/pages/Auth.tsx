@@ -13,6 +13,7 @@ const loginSchema = z.object({
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [forgotMode, setForgotMode] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -89,6 +90,25 @@ const Auth = () => {
     checkAccess();
   }, [user, navigate, toast]);
 
+  const handlePasswordReset = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      toast({ title: "Enter your email", description: "Type the email associated with your account.", variant: "destructive" });
+      return;
+    }
+    setSubmitting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    setSubmitting(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Check your email", description: "If an account exists for that email, you'll receive a password reset link." });
+      setForgotMode(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = loginSchema.safeParse({ email, password });
@@ -161,46 +181,85 @@ const Auth = () => {
       <SEO title="Board Login" description="Sign in to the Helsingborg United SC management area." path="/auth" />
       <div className="w-full max-w-md bg-card border border-border rounded-lg p-8 shadow-sm">
         <h1 className="font-display text-3xl text-foreground text-center tracking-wide mb-2">
-          {isLogin ? "Board Login" : "Create Account"}
+          {forgotMode ? "Reset Password" : isLogin ? "Board Login" : "Create Account"}
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-8">
-          {isLogin ? "Sign in to manage the club (board members only)" : "Register a new board account"}
+          {forgotMode
+            ? "Enter your email and we'll send a reset link"
+            : isLogin
+              ? "Sign in to manage the club (board members only)"
+              : "Register a new board account"}
         </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              required
-            />
+
+        {forgotMode ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                required
+              />
+            </div>
+            <button
+              onClick={handlePasswordReset}
+              disabled={submitting}
+              className="w-full bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase py-3 rounded hover:brightness-110 transition disabled:opacity-50"
+            >
+              {submitting ? "Please wait…" : "Send Reset Link"}
+            </button>
+            <p className="text-center text-sm text-muted-foreground">
+              <button onClick={() => setForgotMode(false)} className="text-primary underline">Back to login</button>
+            </p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase py-3 rounded hover:brightness-110 transition disabled:opacity-50"
-          >
-            {submitting ? "Please wait…" : isLogin ? "Sign In" : "Sign Up"}
-          </button>
-        </form>
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-          <button onClick={() => setIsLogin(!isLogin)} className="text-primary underline">
-            {isLogin ? "Sign up" : "Sign in"}
-          </button>
-        </p>
+        ) : (
+          <>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  required
+                />
+              </div>
+              {isLogin && (
+                <div className="text-right">
+                  <button type="button" onClick={() => setForgotMode(true)} className="text-sm text-primary hover:underline">
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase py-3 rounded hover:brightness-110 transition disabled:opacity-50"
+              >
+                {submitting ? "Please wait…" : isLogin ? "Sign In" : "Sign Up"}
+              </button>
+            </form>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button onClick={() => setIsLogin(!isLogin)} className="text-primary underline">
+                {isLogin ? "Sign up" : "Sign in"}
+              </button>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

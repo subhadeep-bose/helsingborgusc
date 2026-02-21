@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle } from "lucide-react";
+import AdminLayout from "@/components/AdminLayout";
 
 interface Member {
   id: string;
@@ -22,7 +23,7 @@ interface UserRole {
 }
 
 const AdminMembers = () => {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
@@ -84,19 +85,11 @@ const AdminMembers = () => {
     else { toast({ title: "Admin role removed" }); fetchData(); }
   };
 
-  if (loading || fetching) {
-    return <div className="min-h-screen flex items-center justify-center pt-20 text-muted-foreground">Loading…</div>;
-  }
-
   const filtered = members.filter(m => m.status === tab);
   const pendingCount = members.filter(m => m.status === "pending").length;
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-16">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <h1 className="font-display text-3xl text-foreground tracking-wide mb-8">
-          Manage <span className="gold-accent">Members</span>
-        </h1>
+    <AdminLayout title="Members" accent="Members" loading={fetching}>
 
         {/* Role Management */}
         <div className="bg-card border border-border rounded-lg p-6 mb-8">
@@ -233,8 +226,7 @@ const AdminMembers = () => {
             </table>
           </div>
         </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 
