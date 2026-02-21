@@ -47,21 +47,23 @@ const Index = () => {
       .limit(4)
       .then(({ data }) => setNews(data ?? []));
 
-    supabase
-      .from("schedule_entries")
-      .select("day, type, event_date, location")
-      .not("event_date", "is", null)
-      .gte("event_date", new Date().toISOString())
-      .order("event_date", { ascending: true })
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setNextEvent({
-            title: `${data[0].type} — ${data[0].day}`,
-            date: data[0].event_date!,
-          });
-        }
-      });
+    // Next event: recurring Sunday training session at 15:00 CET
+    const now = new Date();
+    const dayOfWeek = now.getUTCDay(); // 0 = Sunday
+    let daysUntilSunday = (7 - dayOfWeek) % 7;
+    if (daysUntilSunday === 0) {
+      // If it's already Sunday, check if the session has passed (15:00 CET = 14:00 UTC)
+      const cutoffToday = new Date(now);
+      cutoffToday.setUTCHours(16, 0, 0, 0); // session ends at 17:00 CET = 16:00 UTC
+      if (now > cutoffToday) daysUntilSunday = 7; // next week
+    }
+    const nextSunday = new Date(now);
+    nextSunday.setUTCDate(now.getUTCDate() + daysUntilSunday);
+    nextSunday.setUTCHours(14, 0, 0, 0); // 15:00 CET = 14:00 UTC
+    setNextEvent({
+      title: "Training Session — Sunday 3–5 PM CET",
+      date: nextSunday.toISOString(),
+    });
   }, []);
 
   return (
@@ -138,10 +140,10 @@ const Index = () => {
           </h2>
           <AnimatedStats
             stats={[
-              { label: "Members", value: 60, suffix: "+" },
-              { label: "Training Sessions", value: 200, suffix: "+" },
-              { label: "Matches Played", value: 35 },
-              { label: "Years Active", value: 10, suffix: "+" },
+              { label: "Members", value: 20 },
+              { label: "Training Sessions", value: 1 },
+              { label: "Matches Played", value: 2 },
+              { label: "Years Active", value: 0, suffix: "+" },
             ]}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-3xl mx-auto">
