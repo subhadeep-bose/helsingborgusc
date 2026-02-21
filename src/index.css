@@ -144,3 +144,28 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Widget animations */
+@keyframes cricket-ball-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.cricket-ball-spin {
+  animation: cricket-ball-spin 1.2s linear infinite;
+}
+
+@keyframes countdown-flip {
+  0% { transform: scaleY(1); }
+  50% { transform: scaleY(0.6); }
+  100% { transform: scaleY(1); }
+}
+
+.countdown-flip {
+  display: inline-block;
+  animation: countdown-flip 0.4s ease-in-out;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
-import { Calendar, Users, Trophy, ArrowRight, Megaphone, Clock } from "lucide-react";
+import { Calendar, Users, Trophy, ArrowRight, Megaphone, Clock, Gamepad2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
 import heroImage from "@/assets/hero-cricket.jpg";
+import { CountdownTimer, AnimatedStats, CricketFacts } from "@/components/widgets";
 
 const features = [
   {
@@ -33,6 +34,7 @@ interface Announcement {
 
 const Index = () => {
   const [news, setNews] = useState<Announcement[]>([]);
+  const [nextEvent, setNextEvent] = useState<{ title: string; date: string } | null>(null);
 
   useEffect(() => {
     supabase
@@ -41,6 +43,22 @@ const Index = () => {
       .order("published_at", { ascending: false })
       .limit(4)
       .then(({ data }) => setNews(data ?? []));
+
+    supabase
+      .from("schedule_entries")
+      .select("day, type, event_date, location")
+      .not("event_date", "is", null)
+      .gte("event_date", new Date().toISOString())
+      .order("event_date", { ascending: true })
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setNextEvent({
+            title: `${data[0].type} — ${data[0].day}`,
+            date: data[0].event_date!,
+          });
+        }
+      });
   }, []);
 
   return (
@@ -109,6 +127,29 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Stats & Widgets */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="font-display text-3xl md:text-4xl text-foreground text-center tracking-wide mb-12">
+            Club by the <span className="gold-accent">Numbers</span>
+          </h2>
+          <AnimatedStats
+            stats={[
+              { label: "Members", value: 60, suffix: "+" },
+              { label: "Training Sessions", value: 200, suffix: "+" },
+              { label: "Matches Played", value: 35 },
+              { label: "Years Active", value: 10, suffix: "+" },
+            ]}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-3xl mx-auto">
+            {nextEvent && (
+              <CountdownTimer targetDate={nextEvent.date} eventName={nextEvent.title} />
+            )}
+            <CricketFacts />
+          </div>
+        </div>
+      </section>
+
       {/* News & Announcements */}
       {news.length > 0 && (
         <section className="py-20">
@@ -150,6 +191,27 @@ const Index = () => {
           </div>
         </section>
       )}
+
+      {/* Fun Zone CTA */}
+      <section className="py-16 bg-section-alt">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-lg mx-auto">
+            <Gamepad2 size={36} className="text-primary mx-auto mb-4" />
+            <h2 className="font-display text-2xl md:text-3xl text-foreground tracking-wide">
+              Visit the <span className="gold-accent">Fun Zone</span>
+            </h2>
+            <p className="mt-3 text-muted-foreground text-sm">
+              Mini-games, cricket quizzes, reaction tests, and more — take a break and have some fun!
+            </p>
+            <Link
+              to="/fun"
+              className="mt-6 inline-flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-8 py-3 rounded hover:brightness-110 transition"
+            >
+              Play Now <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <section className="py-20 bg-primary">
         <div className="container mx-auto px-4 text-center">
