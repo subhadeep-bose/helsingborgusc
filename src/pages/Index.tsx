@@ -7,8 +7,8 @@ import heroImage from "@/assets/hero-cricket.jpg";
 const features = [
   {
     icon: Calendar,
-    title: "Weekend Training",
-    desc: "Regular Saturday & Sunday sessions for all skill levels.",
+    title: "Regular Training",
+    desc: "Weekend sessions year-round, with extra weekday cricket in summer.",
   },
   {
     icon: Users,
@@ -62,8 +62,9 @@ const Index = () => {
               <span className="gold-accent">Sports Club</span>
             </h1>
             <p className="mt-6 text-primary-foreground/80 text-lg md:text-xl max-w-lg leading-relaxed">
-              Weekend leisure cricket for everyone. Join our passionate community
-              and discover the joy of cricket in Sweden.
+              Leisure cricket for everyone — weekends year-round, plus weekday
+              sessions in the summer. Join our passionate community and discover
+              the joy of cricket in Sweden.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
@@ -154,7 +155,7 @@ const Index = () => {
             Ready to Play?
           </h2>
           <p className="mt-4 text-primary-foreground/70 max-w-md mx-auto">
-            No experience needed. All skill levels welcome. Come join us for a weekend of cricket and fun.
+            No experience needed. All skill levels welcome. Weekends year-round and weekday sessions in summer — come join the fun.
           </p>
           <Link
             to="/registration"

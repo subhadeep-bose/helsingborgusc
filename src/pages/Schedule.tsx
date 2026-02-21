@@ -36,7 +36,7 @@ const Schedule = () => {
   if (loading) {
     return (
       <div>
-        <PageHeader title="Training Schedule" subtitle="Weekly sessions and upcoming events" />
+        <PageHeader title="Training Schedule" subtitle="Weekends year-round · Weekday sessions in summer · Upcoming events" />
         <div className="container mx-auto px-4 py-16 text-center text-muted-foreground">Loading…</div>
       </div>
     );
@@ -44,7 +44,7 @@ const Schedule = () => {
 
   return (
     <div>
-      <PageHeader title="Training Schedule" subtitle="Weekly sessions and upcoming events" />
+      <PageHeader title="Training Schedule" subtitle="Weekends year-round · Weekday sessions in summer · Upcoming events" />
       <div className="container mx-auto px-4 py-16">
         <h2 className="font-display text-2xl text-foreground mb-6">Weekly Training</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16">
