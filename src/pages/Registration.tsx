@@ -62,7 +62,11 @@ const Registration = () => {
     setLoading(false);
 
     if (error) {
-      toast.error("Registration failed. Please try again.");
+      if (error.code === "23505") {
+        toast.error("This email is already registered. If your application is pending, please wait for admin approval.");
+      } else {
+        toast.error("Registration failed. Please try again.");
+      }
       return;
     }
 

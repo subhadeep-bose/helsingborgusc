@@ -45,6 +45,10 @@ const AdminMembers = () => {
   useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
 
   const handleDelete = async (id: string) => {
+    const member = members.find(m => m.id === id);
+    const name = member ? `${member.first_name} ${member.last_name ?? ""}`.trim() : "this member";
+    if (!window.confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
+
     const { error } = await supabase.from("members").delete().eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Member removed" }); fetchData(); }

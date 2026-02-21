@@ -119,47 +119,9 @@ const Auth = () => {
     setSubmitting(true);
 
     if (isLogin) {
-      // Check membership + board membership before attempting login
-      const { data: member } = await supabase
-        .from("members")
-        .select("id, status")
-        .eq("email", email.trim())
-        .maybeSingle();
-      if (!member) {
-        toast({
-          title: "Access denied",
-          description: "You must be a registered member to log in. Please register first via the Join Us page.",
-          variant: "destructive",
-        });
-        setSubmitting(false);
-        return;
-      }
-      if (member.status !== "approved") {
-        toast({
-          title: "Pending approval",
-          description: "Your membership is still pending admin approval. Please wait for confirmation.",
-          variant: "destructive",
-        });
-        setSubmitting(false);
-        return;
-      }
-
-      // Check board membership by member_id
-      const { data: boardMember } = await supabase
-        .from("board_members")
-        .select("id")
-        .eq("member_id", member.id)
-        .maybeSingle();
-      if (!boardMember) {
-        toast({
-          title: "Access restricted",
-          description: "Only board members can log in. Contact the club administration if you believe this is an error.",
-          variant: "destructive",
-        });
-        setSubmitting(false);
-        return;
-      }
-
+      // Sign in first — post-auth useEffect handles membership + board checks
+      // (Pre-login checks removed: RLS hides non-approved members from anon,
+      //  causing wrong error messages for pending/rejected members.)
       const { error } = await signIn(email, password);
       setSubmitting(false);
       if (error) {
