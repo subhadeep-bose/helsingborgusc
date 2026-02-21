@@ -24,6 +24,7 @@ import NotFound from "./pages/NotFound";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
 import Statutes from "./pages/Statutes";
+import FunZone from "./pages/FunZone";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/statutes" element={<Statutes />} />
+                  <Route path="/fun" element={<FunZone />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
