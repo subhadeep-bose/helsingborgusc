@@ -18,6 +18,7 @@ const Footer = () => (
             <Link to="/schedule" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Training Schedule</Link>
             <Link to="/gallery" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Gallery</Link>
             <Link to="/contact" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Contact Us</Link>
+            <Link to="/cricket-live" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">India Cricket Live</Link>
             <Link to="/fun" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Fun Zone</Link>
             <Link to="/privacy" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Privacy Policy</Link>
           </div>

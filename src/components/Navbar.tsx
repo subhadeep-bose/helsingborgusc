@@ -11,6 +11,7 @@ const links = [
   { to: "/schedule", label: "Schedule" },
   { to: "/gallery", label: "Gallery" },
   { to: "/contact", label: "Contact" },
+  { to: "/cricket-live", label: "India Live" },
   { to: "/fun", label: "Fun Zone" },
 ];
 

@@ -6,3 +6,5 @@ export { default as LiveClock } from "./LiveClock";
 export { default as CricketHitGame } from "./CricketHitGame";
 export { default as CricketQuiz } from "./CricketQuiz";
 export { default as ReactionTest } from "./ReactionTest";
+export { default as LiveCricketScores } from "./LiveCricketScores";
+export { default as UpcomingMatches } from "./UpcomingMatches";
