@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom";
-import { Calendar, Users, Trophy, ArrowRight, Megaphone, Clock, Gamepad2, Radio } from "lucide-react";
+import { Calendar, Users, Trophy, ArrowRight, Megaphone, Clock, Gamepad2 } from "lucide-react";
 import SEO from "@/components/SEO";
 import heroImage from "@/assets/hero-cricket.jpg";
 import { CountdownTimer, AnimatedStats, CricketFacts } from "@/components/widgets";
-import LiveCricketScores from "@/components/widgets/LiveCricketScores";
-import UpcomingMatches from "@/components/widgets/UpcomingMatches";
-import { isApiConfigured } from "@/services/cricketApi";
+
 import { useLatestAnnouncements, useClubStats, useNextEvent } from "@/hooks/queries";
 
 const features = [
@@ -127,42 +125,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
-      {/* Live India Cricket */}
-      {isApiConfigured() && (
-        <section className="py-16 bg-section-alt">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-center gap-3 mb-8">
-              <Radio size={24} className="text-destructive" />
-              <h2 className="font-display text-2xl md:text-3xl text-foreground tracking-wide">
-                India <span className="gold-accent">Cricket Live</span>
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-              <div>
-                <h3 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-3">
-                  Live & Recent Scores
-                </h3>
-                <LiveCricketScores limit={2} compact />
-              </div>
-              <div>
-                <h3 className="font-display text-sm uppercase tracking-wider text-muted-foreground mb-3">
-                  Upcoming Matches
-                </h3>
-                <UpcomingMatches limit={3} compact />
-              </div>
-            </div>
-            <div className="text-center mt-6">
-              <Link
-                to="/cricket-live"
-                className="inline-flex items-center gap-1.5 text-sm font-display text-primary hover:underline"
-              >
-                View all India matches <ArrowRight size={14} />
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* News & Announcements */}
       {news.length > 0 && (
