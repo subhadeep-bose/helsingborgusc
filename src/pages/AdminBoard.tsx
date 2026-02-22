@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus, Pencil } from "lucide-react";
+import { Trash2, Plus, Pencil, Search, ChevronDown, Users, X } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 
 interface BoardMember {
@@ -116,27 +116,19 @@ const AdminBoard = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">Link to Member</label>
-              <select
-                value={form.member_id}
-                onChange={e => {
-                  const selectedMember = memberOptions.find(mo => mo.id === e.target.value);
+              <MemberSelector
+                memberOptions={memberOptions}
+                boardMembers={members}
+                selectedMemberId={form.member_id}
+                onSelect={(mo) => {
                   setForm(p => ({
                     ...p,
-                    member_id: e.target.value,
-                    ...(selectedMember ? {
-                      name: `${selectedMember.first_name} ${selectedMember.last_name ?? ""}`.trim(),
-                    } : {}),
+                    member_id: mo.id,
+                    name: `${mo.first_name} ${mo.last_name ?? ""}`.trim(),
                   }));
                 }}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-body focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">— No linked member —</option>
-                {memberOptions.map(mo => (
-                  <option key={mo.id} value={mo.id}>
-                    {mo.first_name} {mo.last_name ?? ""} ({mo.email})
-                  </option>
-                ))}
-              </select>
+                onClear={() => setForm(p => ({ ...p, member_id: "" }))}
+              />
               <p className="text-xs text-muted-foreground mt-1">Linking a member shares the same identity across members, board, and auth.</p>
             </div>
             <div>
@@ -173,6 +165,166 @@ const AdminBoard = () => {
           ))}
         </div>
     </AdminLayout>
+  );
+};
+
+/* ───── Searchable Member Dropdown ───── */
+const MemberSelector = ({
+  memberOptions,
+  boardMembers,
+  selectedMemberId,
+  onSelect,
+  onClear,
+}: {
+  memberOptions: MemberOption[];
+  boardMembers: BoardMember[];
+  selectedMemberId: string;
+  onSelect: (m: MemberOption) => void;
+  onClear: () => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const boardMemberIds = new Set(boardMembers.map(b => b.member_id).filter(Boolean));
+  const selectedMember = memberOptions.find(mo => mo.id === selectedMemberId);
+
+  const filtered = memberOptions.filter((mo) => {
+    const q = search.toLowerCase();
+    const name = `${mo.first_name} ${mo.last_name ?? ""}`.toLowerCase();
+    return name.includes(q) || mo.email.toLowerCase().includes(q);
+  });
+
+  return (
+    <div className="relative" ref={ref}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between rounded-lg border border-input bg-background px-4 py-2.5 text-sm hover:border-primary/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {selectedMember ? (
+          <span className="flex items-center gap-2 text-foreground">
+            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-display text-foreground">
+                {selectedMember.first_name.charAt(0).toUpperCase()}
+                {(selectedMember.last_name ?? "").charAt(0).toUpperCase()}
+              </span>
+            </div>
+            {selectedMember.first_name} {selectedMember.last_name ?? ""}
+            <span className="text-xs text-muted-foreground">({selectedMember.email})</span>
+          </span>
+        ) : (
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <Users size={14} className="text-primary" />
+            Select a member to link…
+          </span>
+        )}
+        <div className="flex items-center gap-1 shrink-0">
+          {selectedMember && (
+            <span
+              role="button"
+              onClick={(e) => { e.stopPropagation(); onClear(); }}
+              className="p-0.5 rounded hover:bg-muted transition"
+              aria-label="Clear selection"
+            >
+              <X size={14} className="text-muted-foreground" />
+            </span>
+          )}
+          <ChevronDown size={16} className={`text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute z-50 mt-1.5 w-full bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+          {/* Search */}
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-border">
+            <Search size={14} className="text-muted-foreground shrink-0" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name or email…"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              autoFocus
+            />
+          </div>
+
+          {/* List */}
+          <div className="max-h-64 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted-foreground text-center">No matching members</p>
+            ) : (
+              filtered.map((mo) => {
+                const alreadyOnBoard = boardMemberIds.has(mo.id) && mo.id !== selectedMemberId;
+                return (
+                  <button
+                    key={mo.id}
+                    type="button"
+                    onClick={() => {
+                      if (!alreadyOnBoard) {
+                        onSelect(mo);
+                        setOpen(false);
+                        setSearch("");
+                      }
+                    }}
+                    disabled={alreadyOnBoard}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${
+                      alreadyOnBoard
+                        ? "opacity-50 cursor-not-allowed"
+                        : mo.id === selectedMemberId
+                          ? "bg-primary/10"
+                          : "hover:bg-primary/5 cursor-pointer"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                      mo.id === selectedMemberId ? "bg-primary/20" : "bg-primary/10"
+                    }`}>
+                      <span className="text-xs font-display text-foreground">
+                        {mo.first_name.charAt(0).toUpperCase()}
+                        {(mo.last_name ?? "").charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-foreground truncate">
+                        {mo.first_name} {mo.last_name ?? ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{mo.email}</p>
+                    </div>
+                    {mo.id === selectedMemberId && (
+                      <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-display tracking-wider uppercase text-primary bg-primary/10 px-2 py-0.5 rounded">
+                        Selected
+                      </span>
+                    )}
+                    {alreadyOnBoard && (
+                      <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-display tracking-wider uppercase text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                        On board
+                      </span>
+                    )}
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {/* Info bar */}
+          <div className="px-4 py-2 border-t border-border bg-muted/30">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Members already assigned to a board position are shown but disabled.
+              Select a member to auto-fill the name and link their identity.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
