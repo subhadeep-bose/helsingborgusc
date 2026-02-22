@@ -226,6 +226,30 @@ CREATE POLICY "Admins can delete contact messages"
   );
 
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migration 8: SECURITY DEFINER function to link auth user (20260222140000)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION public.link_user_to_member(_member_id UUID)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE members
+  SET user_id = auth.uid()
+  WHERE id = _member_id
+    AND user_id IS NULL;
+
+  UPDATE board_members
+  SET user_id = auth.uid()
+  WHERE member_id = _member_id
+    AND user_id IS NULL;
+END;
+$$;
+
+
 -- ═════════════════════════════════════════════════════════════════════════════
--- Done! All 7 pending migrations applied.
+-- Done! All 8 pending migrations applied.
 -- ═════════════════════════════════════════════════════════════════════════════

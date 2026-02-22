@@ -45,26 +45,10 @@ const Auth = () => {
         return;
       }
 
-      // 2. Link user_id to member record if not already linked
+      // 2. Link user_id to member (and board_member) via SECURITY DEFINER function
+      //    Direct updates fail because RLS checks user_id = auth.uid() which is NULL on first login
       if (!member.user_id) {
-        await supabase
-          .from("members")
-          .update({ user_id: user.id })
-          .eq("id", member.id);
-      }
-
-      // 3. Link user_id to board_member record if they are one
-      const { data: boardMember } = await supabase
-        .from("board_members")
-        .select("id, user_id, member_id")
-        .eq("member_id", member.id)
-        .maybeSingle();
-
-      if (boardMember && !boardMember.user_id) {
-        await supabase
-          .from("board_members")
-          .update({ user_id: user.id })
-          .eq("id", boardMember.id);
+        await supabase.rpc("link_user_to_member", { _member_id: member.id });
       }
 
       navigate(redirectTo, { replace: true });
