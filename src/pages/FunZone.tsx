@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import SEO from "@/components/SEO";
 import PageHeader from "@/components/PageHeader";
+import { supabase } from "@/integrations/supabase/client";
 import {
   CricketHitGame,
   CricketQuiz,
@@ -9,14 +11,18 @@ import {
   AnimatedStats,
 } from "@/components/widgets";
 
-const stats = [
-  { label: "Members", value: 20 },
-  { label: "Training Sessions", value: 1 },
-  { label: "Matches Played", value: 2 },
-  { label: "Years Active", value: 0, suffix: "+" },
-];
-
 const FunZone = () => {
+  const [stats, setStats] = useState({ members: 0, sessions: 0, matches: 0 });
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("members").select("id", { count: "exact", head: true }).eq("status", "approved"),
+      supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "weekly"),
+      supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "event"),
+    ]).then(([m, s, e]) => {
+      setStats({ members: m.count ?? 0, sessions: s.count ?? 0, matches: e.count ?? 0 });
+    });
+  }, []);
   return (
     <div className="font-body">
       <SEO
@@ -35,7 +41,12 @@ const FunZone = () => {
           <h2 className="font-display text-2xl text-foreground tracking-wide text-center mb-8">
             Club by the <span className="gold-accent">Numbers</span>
           </h2>
-          <AnimatedStats stats={stats} />
+          <AnimatedStats stats={[
+            { label: "Members", value: stats.members },
+            { label: "Training Sessions", value: stats.sessions },
+            { label: "Matches / Events", value: stats.matches },
+            { label: "Years Active", value: new Date().getFullYear() - 2025, suffix: "+" },
+          ]} />
         </div>
 
         {/* Games Grid */}

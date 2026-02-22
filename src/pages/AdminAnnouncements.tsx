@@ -81,6 +81,7 @@ const AdminAnnouncements = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this announcement?")) return;
     const { error } = await supabase.from("announcements").delete().eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else {

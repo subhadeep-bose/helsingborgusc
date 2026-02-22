@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -19,6 +19,8 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,7 +76,7 @@ const Auth = () => {
           .eq("id", boardMember.id);
       }
 
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     };
     checkAccess();
   }, [user, navigate, toast]);

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Upload, ImagePlus } from "lucide-react";
+import { Trash2, Upload, ImagePlus, Pencil, Check } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
 
 interface GalleryImage {
@@ -86,6 +86,7 @@ const AdminGallery = () => {
   };
 
   const handleDelete = async (img: GalleryImage) => {
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
     const { error: storageErr } = await supabase.storage.from("gallery").remove([img.storage_path]);
     if (storageErr) {
       toast({ title: "Storage error", description: storageErr.message, variant: "destructive" });
@@ -122,28 +123,90 @@ const AdminGallery = () => {
         {/* Image grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {images.length === 0 && <p className="col-span-full text-muted-foreground text-center py-8">No gallery images yet.</p>}
-          {images.map((img) => {
-            const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(img.storage_path);
-            return (
-              <div key={img.id} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
-                <img src={urlData.publicUrl} alt={img.alt} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition flex items-center justify-center">
-                  <button
-                    onClick={() => handleDelete(img)}
-                    className="opacity-0 group-hover:opacity-100 transition p-2 bg-destructive text-destructive-foreground rounded-full"
-                    aria-label="Delete image"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-                <p className="absolute bottom-0 left-0 right-0 bg-foreground/60 text-background text-xs px-2 py-1 truncate">
-                  {img.alt}
-                </p>
-              </div>
-            );
-          })}
+          {images.map((img) => (
+            <ImageCard key={img.id} img={img} onDelete={handleDelete} onAltUpdate={fetchImages} />
+          ))}
         </div>
     </AdminLayout>
+  );
+};
+
+/* ───── Per-image card with inline alt edit ───── */
+const ImageCard = ({
+  img,
+  onDelete,
+  onAltUpdate,
+}: {
+  img: GalleryImage;
+  onDelete: (img: GalleryImage) => void;
+  onAltUpdate: () => void;
+}) => {
+  const { toast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [altValue, setAltValue] = useState(img.alt);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(img.storage_path);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const saveAlt = async () => {
+    const trimmed = altValue.trim();
+    if (!trimmed) { setAltValue(img.alt); setEditing(false); return; }
+    if (trimmed === img.alt) { setEditing(false); return; }
+    const { error } = await supabase.from("gallery_images").update({ alt: trimmed }).eq("id", img.id);
+    if (error) {
+      toast({ title: "Error saving alt text", description: error.message, variant: "destructive" });
+      setAltValue(img.alt);
+    } else {
+      toast({ title: "Alt text updated" });
+      onAltUpdate();
+    }
+    setEditing(false);
+  };
+
+  return (
+    <div className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+      <img src={urlData.publicUrl} alt={img.alt} className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/40 transition flex items-center justify-center gap-2">
+        <button
+          onClick={() => setEditing(true)}
+          className="opacity-0 group-hover:opacity-100 transition p-2 bg-primary text-primary-foreground rounded-full"
+          aria-label="Edit alt text"
+        >
+          <Pencil size={16} />
+        </button>
+        <button
+          onClick={() => onDelete(img)}
+          className="opacity-0 group-hover:opacity-100 transition p-2 bg-destructive text-destructive-foreground rounded-full"
+          aria-label="Delete image"
+        >
+          <Trash2 size={18} />
+        </button>
+      </div>
+      {editing ? (
+        <div className="absolute bottom-0 left-0 right-0 bg-foreground/80 flex items-center">
+          <input
+            ref={inputRef}
+            value={altValue}
+            onChange={e => setAltValue(e.target.value)}
+            onBlur={saveAlt}
+            onKeyDown={e => { if (e.key === "Enter") saveAlt(); if (e.key === "Escape") { setAltValue(img.alt); setEditing(false); } }}
+            className="flex-1 bg-transparent text-background text-xs px-2 py-1.5 outline-none placeholder:text-background/60"
+            placeholder="Alt text…"
+          />
+          <button onClick={saveAlt} className="p-1 text-background/80 hover:text-background shrink-0" aria-label="Save">
+            <Check size={14} />
+          </button>
+        </div>
+      ) : (
+        <p className="absolute bottom-0 left-0 right-0 bg-foreground/60 text-background text-xs px-2 py-1 truncate">
+          {img.alt}
+        </p>
+      )}
+    </div>
   );
 };
 

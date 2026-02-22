@@ -38,8 +38,10 @@ interface Announcement {
 const Index = () => {
   const [news, setNews] = useState<Announcement[]>([]);
   const [nextEvent, setNextEvent] = useState<{ title: string; date: string } | null>(null);
+  const [stats, setStats] = useState({ members: 0, sessions: 0, matches: 0 });
 
   useEffect(() => {
+    // Fetch announcements
     supabase
       .from("announcements")
       .select("id, title, summary, tag, published_at")
@@ -47,23 +49,54 @@ const Index = () => {
       .limit(4)
       .then(({ data }) => setNews(data ?? []));
 
-    // Next event: recurring Sunday training session at 15:00 CET
-    const now = new Date();
-    const dayOfWeek = now.getUTCDay(); // 0 = Sunday
-    let daysUntilSunday = (7 - dayOfWeek) % 7;
-    if (daysUntilSunday === 0) {
-      // If it's already Sunday, check if the session has passed (15:00 CET = 14:00 UTC)
-      const cutoffToday = new Date(now);
-      cutoffToday.setUTCHours(16, 0, 0, 0); // session ends at 17:00 CET = 16:00 UTC
-      if (now > cutoffToday) daysUntilSunday = 7; // next week
-    }
-    const nextSunday = new Date(now);
-    nextSunday.setUTCDate(now.getUTCDate() + daysUntilSunday);
-    nextSunday.setUTCHours(14, 0, 0, 0); // 15:00 CET = 14:00 UTC
-    setNextEvent({
-      title: "Training Session — Sunday 3–5 PM CET",
-      date: nextSunday.toISOString(),
+    // Fetch live stats
+    Promise.all([
+      supabase.from("members").select("id", { count: "exact", head: true }).eq("status", "approved"),
+      supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "weekly"),
+      supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "event"),
+    ]).then(([membersRes, sessionsRes, matchesRes]) => {
+      setStats({
+        members: membersRes.count ?? 0,
+        sessions: sessionsRes.count ?? 0,
+        matches: matchesRes.count ?? 0,
+      });
     });
+
+    // Fetch next event from schedule
+    const computeCountdown = async () => {
+      // Try upcoming events first
+      const { data: events } = await supabase
+        .from("schedule_entries")
+        .select("type, event_date")
+        .eq("category", "event")
+        .gte("event_date", new Date().toISOString().split("T")[0])
+        .order("event_date")
+        .limit(1);
+      if (events && events.length > 0 && events[0].event_date) {
+        setNextEvent({
+          title: events[0].type,
+          date: new Date(events[0].event_date + "T10:00:00").toISOString(),
+        });
+        return;
+      }
+      // Fallback: next weekly training (Sunday 3–5 PM CET)
+      const now = new Date();
+      const dayOfWeek = now.getUTCDay();
+      let daysUntilSunday = (7 - dayOfWeek) % 7;
+      if (daysUntilSunday === 0) {
+        const cutoffToday = new Date(now);
+        cutoffToday.setUTCHours(16, 0, 0, 0);
+        if (now > cutoffToday) daysUntilSunday = 7;
+      }
+      const nextSunday = new Date(now);
+      nextSunday.setUTCDate(now.getUTCDate() + daysUntilSunday);
+      nextSunday.setUTCHours(14, 0, 0, 0);
+      setNextEvent({
+        title: "Training Session — Sunday 3–5 PM CET",
+        date: nextSunday.toISOString(),
+      });
+    };
+    computeCountdown();
   }, []);
 
   return (
@@ -140,10 +173,10 @@ const Index = () => {
           </h2>
           <AnimatedStats
             stats={[
-              { label: "Members", value: 20 },
-              { label: "Training Sessions", value: 1 },
-              { label: "Matches Played", value: 2 },
-              { label: "Years Active", value: 0, suffix: "+" },
+              { label: "Members", value: stats.members },
+              { label: "Training Sessions", value: stats.sessions },
+              { label: "Matches / Events", value: stats.matches },
+              { label: "Years Active", value: new Date().getFullYear() - 2025, suffix: "+" },
             ]}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-3xl mx-auto">
@@ -223,11 +256,19 @@ const Index = () => {
                   <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
                     {item.summary}
                   </p>
                 </div>
               ))}
+            </div>
+            <div className="text-center mt-8">
+              <Link
+                to="/news"
+                className="inline-flex items-center gap-1.5 text-sm font-display text-primary hover:underline"
+              >
+                View all news <ArrowRight size={14} />
+              </Link>
             </div>
           </div>
         </section>
