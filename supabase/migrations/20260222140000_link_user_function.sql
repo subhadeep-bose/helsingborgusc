@@ -22,3 +22,19 @@ BEGIN
     AND user_id IS NULL;
 END;
 $$;
+
+-- Back-fill: retroactively link any members who already have auth accounts
+-- but whose user_id was never set (because the function didn't exist yet)
+UPDATE public.members m
+SET user_id = u.id
+FROM auth.users u
+WHERE lower(m.email) = lower(u.email)
+  AND m.user_id IS NULL;
+
+-- Also back-fill board_members user_id for any linked members
+UPDATE public.board_members bm
+SET user_id = m.user_id
+FROM public.members m
+WHERE bm.member_id = m.id
+  AND m.user_id IS NOT NULL
+  AND bm.user_id IS NULL;

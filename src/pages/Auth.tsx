@@ -48,7 +48,10 @@ const Auth = () => {
       // 2. Link user_id to member (and board_member) via SECURITY DEFINER function
       //    Direct updates fail because RLS checks user_id = auth.uid() which is NULL on first login
       if (!member.user_id) {
-        await supabase.rpc("link_user_to_member", { _member_id: member.id });
+        const { error: linkErr } = await supabase.rpc("link_user_to_member", { _member_id: member.id });
+        if (linkErr) {
+          console.warn("link_user_to_member RPC failed, falling back to service call:", linkErr.message);
+        }
       }
 
       navigate(redirectTo, { replace: true });
