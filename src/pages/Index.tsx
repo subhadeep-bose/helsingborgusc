@@ -113,7 +113,7 @@ const Index = () => {
             stats={[
               { label: "Members", value: stats.members },
               { label: "Training Sessions", value: stats.sessions },
-              { label: "Matches / Events", value: stats.matches },
+              { label: "Matches Played", value: stats.matches, suffix: "+" },
               { label: "Years Active", value: new Date().getFullYear() - 2025, suffix: "+" },
             ]}
           />

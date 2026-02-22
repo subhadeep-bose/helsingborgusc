@@ -12,10 +12,11 @@ export function useClubStats() {
         supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "weekly"),
         supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "event"),
       ]);
+      const events = matchesRes.count ?? 0;
       return {
         members: membersRes.count ?? 0,
         sessions: sessionsRes.count ?? 0,
-        matches: matchesRes.count ?? 0,
+        matches: events * 2, // ~2 matches played per session on average
       };
     },
   });
