@@ -23,7 +23,7 @@ const Auth = () => {
 
   useEffect(() => {
     if (!user) return;
-    // Check if user is a registered member AND a board member
+    // Check if user is a registered & approved member
     const checkAccess = async () => {
       // 1. Check membership
       const { data: member } = await supabase
@@ -60,25 +60,14 @@ const Auth = () => {
           .eq("id", member.id);
       }
 
-      // 3. Check board membership
+      // 3. Link user_id to board_member record if they are one
       const { data: boardMember } = await supabase
         .from("board_members")
         .select("id, user_id, member_id")
         .eq("member_id", member.id)
         .maybeSingle();
 
-      if (!boardMember) {
-        toast({
-          title: "Access restricted",
-          description: "Only board members can log in to the management area.",
-          variant: "destructive",
-        });
-        await supabase.auth.signOut();
-        return;
-      }
-
-      // 4. Link user_id to board_member record if not already linked
-      if (!boardMember.user_id) {
+      if (boardMember && !boardMember.user_id) {
         await supabase
           .from("board_members")
           .update({ user_id: user.id })
@@ -140,17 +129,17 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 pt-20">
-      <SEO title="Board Login" description="Sign in to the Helsingborg United SC management area." path="/auth" />
+      <SEO title="Member Login" description="Sign in to your Helsingborg United SC account." path="/auth" />
       <div className="w-full max-w-md bg-card border border-border rounded-lg p-8 shadow-sm">
         <h1 className="font-display text-3xl text-foreground text-center tracking-wide mb-2">
-          {forgotMode ? "Reset Password" : isLogin ? "Board Login" : "Create Account"}
+          {forgotMode ? "Reset Password" : isLogin ? "Member Login" : "Create Account"}
         </h1>
         <p className="text-sm text-muted-foreground text-center mb-8">
           {forgotMode
             ? "Enter your email and we'll send a reset link"
             : isLogin
-              ? "Sign in to manage the club (board members only)"
-              : "Register a new board account"}
+              ? "Sign in with your member account"
+              : "Create a member account"}
         </p>
 
         {forgotMode ? (
