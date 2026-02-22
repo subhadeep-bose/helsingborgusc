@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import SEO from "@/components/SEO";
 
 const loginSchema = z.object({
@@ -21,7 +21,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -35,21 +34,13 @@ const Auth = () => {
         .maybeSingle();
 
       if (!member) {
-        toast({
-          title: "Access denied",
-          description: "You must be a registered member to log in. Please register first.",
-          variant: "destructive",
-        });
+        toast.error("Access denied", { description: "You must be a registered member to log in. Please register first." });
         await supabase.auth.signOut();
         return;
       }
 
       if (member.status !== "approved") {
-        toast({
-          title: "Pending approval",
-          description: "Your membership is still pending admin approval.",
-          variant: "destructive",
-        });
+        toast.error("Pending approval", { description: "Your membership is still pending admin approval." });
         await supabase.auth.signOut();
         return;
       }
@@ -84,7 +75,7 @@ const Auth = () => {
   const handlePasswordReset = async () => {
     const trimmed = email.trim();
     if (!trimmed) {
-      toast({ title: "Enter your email", description: "Type the email associated with your account.", variant: "destructive" });
+      toast.error("Enter your email", { description: "Type the email associated with your account." });
       return;
     }
     setSubmitting(true);
@@ -93,9 +84,9 @@ const Auth = () => {
     });
     setSubmitting(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast.error("Error", { description: error.message });
     } else {
-      toast({ title: "Check your email", description: "If an account exists for that email, you'll receive a password reset link." });
+      toast("Check your email", { description: "If an account exists for that email, you'll receive a password reset link." });
       setForgotMode(false);
     }
   };
@@ -104,7 +95,7 @@ const Auth = () => {
     e.preventDefault();
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
-      toast({ title: "Validation Error", description: result.error.errors[0].message, variant: "destructive" });
+      toast.error("Validation Error", { description: result.error.errors[0].message });
       return;
     }
     setSubmitting(true);
@@ -116,15 +107,15 @@ const Auth = () => {
       const { error } = await signIn(email, password);
       setSubmitting(false);
       if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+        toast.error("Error", { description: error.message });
       }
     } else {
       const { error } = await signUp(email, password);
       setSubmitting(false);
       if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+        toast.error("Error", { description: error.message });
       } else {
-        toast({ title: "Account created", description: "Check your email to confirm your account." });
+        toast("Account created", { description: "Check your email to confirm your account." });
       }
     }
   };

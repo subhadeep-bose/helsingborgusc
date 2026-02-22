@@ -1,18 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Trash2, Plus, Pencil, Search, ChevronDown, Users, X } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
-
-interface BoardMember {
-  id: string;
-  name: string;
-  role: string;
-  sort_order: number;
-  member_id: string | null;
-  user_id: string | null;
-}
+import { useBoardMembers, useCreateBoardMember, useUpdateBoardMember, useDeleteBoardMember, useAllMembers } from "@/hooks/queries";
+import type { BoardMember } from "@/hooks/queries";
 
 interface MemberOption {
   id: string;
@@ -23,26 +15,18 @@ interface MemberOption {
 
 const AdminBoard = () => {
   const { isAdmin } = useAuth();
-  const { toast } = useToast();
-  const [members, setMembers] = useState<BoardMember[]>([]);
-  const [memberOptions, setMemberOptions] = useState<MemberOption[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { data: members = [], isLoading: fetching } = useBoardMembers();
+  const { data: allMembers = [] } = useAllMembers(isAdmin);
+  const memberOptions: MemberOption[] = allMembers
+    .filter(m => m.status === "approved")
+    .map(m => ({ id: m.id, first_name: m.first_name, last_name: m.last_name, email: m.email }));
+  const createMutation = useCreateBoardMember();
+  const updateMutation = useUpdateBoardMember();
+  const deleteMutation = useDeleteBoardMember();
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", role: "", sort_order: 0, member_id: "" });
-  const [submitting, setSubmitting] = useState(false);
-
-  const fetchMembers = async () => {
-    const [boardRes, memberRes] = await Promise.all([
-      supabase.from("board_members").select("*").order("sort_order"),
-      supabase.from("members").select("id, first_name, last_name, email").eq("status", "approved").order("first_name"),
-    ]);
-    setMembers(boardRes.data ?? []);
-    setMemberOptions(memberRes.data ?? []);
-    setFetching(false);
-  };
-
-  useEffect(() => { if (isAdmin) fetchMembers(); }, [isAdmin]);
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const resetForm = () => {
     setForm({ name: "", role: "", sort_order: 0, member_id: "" });
@@ -53,35 +37,37 @@ const AdminBoard = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.role.trim()) {
-      toast({ title: "Name and role are required", variant: "destructive" });
+      toast.error("Name and role are required");
       return;
     }
-    setSubmitting(true);
     const payload = {
       name: form.name.trim(),
       role: form.role.trim(),
       sort_order: form.sort_order,
       member_id: form.member_id || null,
     };
-    if (editId) {
-      const { error } = await supabase.from("board_members").update(payload).eq("id", editId);
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Updated!" });
-    } else {
-      const { error } = await supabase.from("board_members").insert(payload);
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Added!" });
+    try {
+      if (editId) {
+        await updateMutation.mutateAsync({ id: editId, ...payload });
+        toast.success("Updated!");
+      } else {
+        await createMutation.mutateAsync(payload);
+        toast.success("Added!");
+      }
+      resetForm();
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
     }
-    setSubmitting(false);
-    resetForm();
-    fetchMembers();
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this board member?")) return;
-    const { error } = await supabase.from("board_members").delete().eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Deleted" }); fetchMembers(); }
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success("Deleted");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
+    }
   };
 
   const startEdit = (m: BoardMember) => {

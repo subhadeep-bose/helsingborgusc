@@ -1,38 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Trash2, Plus, Pencil } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
-
-interface ScheduleEntry {
-  id: string;
-  day: string;
-  time: string;
-  type: string;
-  location: string;
-  category: string;
-  event_date: string | null;
-  sort_order: number;
-}
+import { useScheduleEntries, useCreateScheduleEntry, useUpdateScheduleEntry, useDeleteScheduleEntry } from "@/hooks/queries";
 
 const AdminSchedule = () => {
   const { isAdmin } = useAuth();
-  const { toast } = useToast();
-  const [entries, setEntries] = useState<ScheduleEntry[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { data: entries = [], isLoading: fetching } = useScheduleEntries();
+  const createMutation = useCreateScheduleEntry();
+  const updateMutation = useUpdateScheduleEntry();
+  const deleteMutation = useDeleteScheduleEntry();
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ day: "", time: "", type: "", location: "", category: "weekly", event_date: "", sort_order: 0 });
-  const [submitting, setSubmitting] = useState(false);
-
-  const fetchEntries = async () => {
-    const { data } = await supabase.from("schedule_entries").select("*").order("category").order("sort_order");
-    setEntries(data ?? []);
-    setFetching(false);
-  };
-
-  useEffect(() => { if (isAdmin) fetchEntries(); }, [isAdmin]);
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const resetForm = () => {
     setForm({ day: "", time: "", type: "", location: "", category: "weekly", event_date: "", sort_order: 0 });
@@ -43,10 +25,9 @@ const AdminSchedule = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.type.trim() || !form.location.trim()) {
-      toast({ title: "Type and location are required", variant: "destructive" });
+      toast.error("Type and location are required");
       return;
     }
-    setSubmitting(true);
     const payload = {
       day: form.day.trim(),
       time: form.time.trim(),
@@ -56,28 +37,31 @@ const AdminSchedule = () => {
       event_date: form.category === "event" && form.event_date ? form.event_date : null,
       sort_order: form.sort_order,
     };
-    if (editId) {
-      const { error } = await supabase.from("schedule_entries").update(payload).eq("id", editId);
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Updated!" });
-    } else {
-      const { error } = await supabase.from("schedule_entries").insert(payload);
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Added!" });
+    try {
+      if (editId) {
+        await updateMutation.mutateAsync({ id: editId, ...payload });
+        toast.success("Updated!");
+      } else {
+        await createMutation.mutateAsync(payload);
+        toast.success("Added!");
+      }
+      resetForm();
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
     }
-    setSubmitting(false);
-    resetForm();
-    fetchEntries();
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this schedule entry?")) return;
-    const { error } = await supabase.from("schedule_entries").delete().eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Deleted" }); fetchEntries(); }
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success("Deleted");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
+    }
   };
 
-  const startEdit = (e: ScheduleEntry) => {
+  const startEdit = (e: typeof entries[number]) => {
     setEditId(e.id);
     setForm({ day: e.day, time: e.time, type: e.type, location: e.location, category: e.category, event_date: e.event_date ?? "", sort_order: e.sort_order });
     setShowForm(true);

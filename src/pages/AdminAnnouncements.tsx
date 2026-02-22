@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Trash2, Plus, Pencil } from "lucide-react";
 import { z } from "zod";
 import AdminLayout from "@/components/AdminLayout";
+import { useAnnouncements, useCreateAnnouncement, useUpdateAnnouncement, useDeleteAnnouncement } from "@/hooks/queries";
 
 const announcementSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
@@ -12,38 +12,18 @@ const announcementSchema = z.object({
   tag: z.string().trim().min(1, "Tag is required").max(50),
 });
 
-interface Announcement {
-  id: string;
-  title: string;
-  summary: string;
-  tag: string;
-  published_at: string;
-}
-
 const AdminAnnouncements = () => {
   const { user, isAdmin } = useAuth();
-  const { toast } = useToast();
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { data: announcements = [], isLoading: fetching } = useAnnouncements();
+  const createMutation = useCreateAnnouncement();
+  const updateMutation = useUpdateAnnouncement();
+  const deleteMutation = useDeleteAnnouncement();
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [tag, setTag] = useState("Club News");
-  const [submitting, setSubmitting] = useState(false);
-
-  const fetchAnnouncements = async () => {
-    const { data } = await supabase
-      .from("announcements")
-      .select("id, title, summary, tag, published_at")
-      .order("published_at", { ascending: false });
-    setAnnouncements(data ?? []);
-    setFetching(false);
-  };
-
-  useEffect(() => {
-    if (isAdmin) fetchAnnouncements();
-  }, [isAdmin]);
+  const submitting = createMutation.isPending || updateMutation.isPending;
 
   const resetForm = () => {
     setTitle("");
@@ -57,36 +37,30 @@ const AdminAnnouncements = () => {
     e.preventDefault();
     const result = announcementSchema.safeParse({ title, summary, tag });
     if (!result.success) {
-      toast({ title: "Validation Error", description: result.error.errors[0].message, variant: "destructive" });
+      toast.error("Validation Error", { description: result.error.errors[0].message });
       return;
     }
-    setSubmitting(true);
-    if (editId) {
-      const { error } = await supabase
-        .from("announcements")
-        .update({ title: result.data.title, summary: result.data.summary, tag: result.data.tag })
-        .eq("id", editId);
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Updated!" });
-    } else {
-      const { error } = await supabase
-        .from("announcements")
-        .insert({ title: result.data.title, summary: result.data.summary, tag: result.data.tag, created_by: user!.id });
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Published!" });
+    try {
+      if (editId) {
+        await updateMutation.mutateAsync({ id: editId, ...result.data });
+        toast.success("Updated!");
+      } else {
+        await createMutation.mutateAsync({ ...result.data, created_by: user!.id });
+        toast.success("Published!");
+      }
+      resetForm();
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
     }
-    setSubmitting(false);
-    resetForm();
-    fetchAnnouncements();
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this announcement?")) return;
-    const { error } = await supabase.from("announcements").delete().eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else {
-      toast({ title: "Deleted" });
-      fetchAnnouncements();
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success("Deleted");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
     }
   };
 

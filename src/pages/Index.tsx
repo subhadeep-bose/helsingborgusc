@@ -1,13 +1,12 @@
 import { Link } from "react-router-dom";
 import { Calendar, Users, Trophy, ArrowRight, Megaphone, Clock, Gamepad2, Radio } from "lucide-react";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
 import heroImage from "@/assets/hero-cricket.jpg";
 import { CountdownTimer, AnimatedStats, CricketFacts } from "@/components/widgets";
 import LiveCricketScores from "@/components/widgets/LiveCricketScores";
 import UpcomingMatches from "@/components/widgets/UpcomingMatches";
 import { isApiConfigured } from "@/services/cricketApi";
+import { useLatestAnnouncements, useClubStats, useNextEvent } from "@/hooks/queries";
 
 const features = [
   {
@@ -36,68 +35,9 @@ interface Announcement {
 }
 
 const Index = () => {
-  const [news, setNews] = useState<Announcement[]>([]);
-  const [nextEvent, setNextEvent] = useState<{ title: string; date: string } | null>(null);
-  const [stats, setStats] = useState({ members: 0, sessions: 0, matches: 0 });
-
-  useEffect(() => {
-    // Fetch announcements
-    supabase
-      .from("announcements")
-      .select("id, title, summary, tag, published_at")
-      .order("published_at", { ascending: false })
-      .limit(4)
-      .then(({ data }) => setNews(data ?? []));
-
-    // Fetch live stats
-    Promise.all([
-      supabase.from("members").select("id", { count: "exact", head: true }).eq("status", "approved"),
-      supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "weekly"),
-      supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "event"),
-    ]).then(([membersRes, sessionsRes, matchesRes]) => {
-      setStats({
-        members: membersRes.count ?? 0,
-        sessions: sessionsRes.count ?? 0,
-        matches: matchesRes.count ?? 0,
-      });
-    });
-
-    // Fetch next event from schedule
-    const computeCountdown = async () => {
-      // Try upcoming events first
-      const { data: events } = await supabase
-        .from("schedule_entries")
-        .select("type, event_date")
-        .eq("category", "event")
-        .gte("event_date", new Date().toISOString().split("T")[0])
-        .order("event_date")
-        .limit(1);
-      if (events && events.length > 0 && events[0].event_date) {
-        setNextEvent({
-          title: events[0].type,
-          date: new Date(events[0].event_date + "T10:00:00").toISOString(),
-        });
-        return;
-      }
-      // Fallback: next weekly training (Sunday 3–5 PM CET)
-      const now = new Date();
-      const dayOfWeek = now.getUTCDay();
-      let daysUntilSunday = (7 - dayOfWeek) % 7;
-      if (daysUntilSunday === 0) {
-        const cutoffToday = new Date(now);
-        cutoffToday.setUTCHours(16, 0, 0, 0);
-        if (now > cutoffToday) daysUntilSunday = 7;
-      }
-      const nextSunday = new Date(now);
-      nextSunday.setUTCDate(now.getUTCDate() + daysUntilSunday);
-      nextSunday.setUTCHours(14, 0, 0, 0);
-      setNextEvent({
-        title: "Training Session — Sunday 3–5 PM CET",
-        date: nextSunday.toISOString(),
-      });
-    };
-    computeCountdown();
-  }, []);
+  const { data: news = [] } = useLatestAnnouncements(4);
+  const { data: stats = { members: 0, sessions: 0, matches: 0 } } = useClubStats();
+  const { data: nextEvent } = useNextEvent();
 
   return (
     <div className="font-body">

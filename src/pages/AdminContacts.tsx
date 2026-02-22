@@ -1,47 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Trash2, Mail, Clock, Search } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
-
-interface ContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-  created_at: string;
-}
+import { useContactMessages, useDeleteContactMessage } from "@/hooks/queries";
 
 const AdminContacts = () => {
   const { isAdmin } = useAuth();
-  const { toast } = useToast();
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { data: messages = [], isLoading: fetching } = useContactMessages(isAdmin);
+  const deleteMutation = useDeleteContactMessage();
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const fetchMessages = async () => {
-    const { data } = await supabase
-      .from("contact_messages")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setMessages(data ?? []);
-    setFetching(false);
-  };
-
-  useEffect(() => {
-    if (isAdmin) fetchMessages();
-  }, [isAdmin]);
-
   const handleDelete = async (id: string) => {
     if (!window.confirm("Delete this message permanently?")) return;
-    const { error } = await supabase.from("contact_messages").delete().eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else {
-      toast({ title: "Deleted" });
-      fetchMessages();
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast.success("Deleted");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
     }
   };
 

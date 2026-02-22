@@ -1,28 +1,9 @@
-import { useState, useEffect } from "react";
 import PageHeader from "@/components/PageHeader";
-import { supabase } from "@/integrations/supabase/client";
 import SEO from "@/components/SEO";
-
-interface BoardMember {
-  id: string;
-  name: string;
-  role: string;
-}
+import { useBoardMembers } from "@/hooks/queries";
 
 const Board = () => {
-  const [board, setBoard] = useState<BoardMember[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase
-      .from("board_members")
-      .select("id, name, role")
-      .order("sort_order")
-      .then(({ data }) => {
-        setBoard(data ?? []);
-        setLoading(false);
-      });
-  }, []);
+  const { data: board = [], isLoading: loading } = useBoardMembers();
 
   return (
     <div>
@@ -30,7 +11,15 @@ const Board = () => {
       <PageHeader title="Board Members" subtitle="The team behind Helsingborg United SC" />
       <div className="container mx-auto px-4 py-16">
         {loading ? (
-          <p className="text-center text-muted-foreground">Loading…</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-card border border-border rounded-lg p-6 animate-pulse">
+                <div className="w-16 h-16 rounded-full bg-muted mb-4" />
+                <div className="h-5 w-32 bg-muted rounded mb-2" />
+                <div className="h-3 w-20 bg-muted rounded" />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {board.map((b) => (

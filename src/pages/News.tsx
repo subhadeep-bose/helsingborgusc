@@ -1,33 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import PageHeader from "@/components/PageHeader";
-import { supabase } from "@/integrations/supabase/client";
 import { Clock, Search } from "lucide-react";
 import SEO from "@/components/SEO";
-
-interface Announcement {
-  id: string;
-  title: string;
-  summary: string;
-  tag: string;
-  published_at: string;
-}
+import { useAnnouncements } from "@/hooks/queries";
 
 const News = () => {
-  const [news, setNews] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: news = [], isLoading: loading } = useAnnouncements();
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase
-      .from("announcements")
-      .select("id, title, summary, tag, published_at")
-      .order("published_at", { ascending: false })
-      .then(({ data }) => {
-        setNews(data ?? []);
-        setLoading(false);
-      });
-  }, []);
 
   const tags = [...new Set(news.map((n) => n.tag))];
 

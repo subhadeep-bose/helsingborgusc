@@ -1,33 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Trash2, Upload, ImagePlus, Pencil, Check } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
-
-interface GalleryImage {
-  id: string;
-  alt: string;
-  storage_path: string;
-  sort_order: number;
-}
+import { useGalleryImages, useDeleteGalleryImage, useUpdateGalleryImage } from "@/hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/keys";
+import type { GalleryImage } from "@/hooks/queries";
 
 const AdminGallery = () => {
   const { user, isAdmin } = useAuth();
-  const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<GalleryImage[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { data: images = [], isLoading: fetching } = useGalleryImages();
+  const deleteMutation = useDeleteGalleryImage();
+  const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [alt, setAlt] = useState("");
 
-  const fetchImages = async () => {
-    const { data } = await supabase.from("gallery_images").select("*").order("sort_order");
-    setImages(data ?? []);
-    setFetching(false);
-  };
-
-  useEffect(() => { if (isAdmin) fetchImages(); }, [isAdmin]);
+  const fetchImages = () => queryClient.invalidateQueries({ queryKey: queryKeys.galleryImages.all });
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
   const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -35,26 +26,18 @@ const AdminGallery = () => {
   const handleUpload = async () => {
     const files = fileRef.current?.files;
     if (!files || files.length === 0) {
-      toast({ title: "Please select a file", variant: "destructive" });
+      toast.error("Please select a file");
       return;
     }
 
     // Validate each file before uploading
     for (const file of Array.from(files)) {
       if (!ALLOWED_TYPES.includes(file.type)) {
-        toast({
-          title: "Invalid file type",
-          description: `"${file.name}" is not a supported image format. Use JPEG, PNG, WebP, or GIF.`,
-          variant: "destructive",
-        });
+        toast.error("Invalid file type", { description: `"${file.name}" is not a supported image format. Use JPEG, PNG, WebP, or GIF.` });
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        toast({
-          title: "File too large",
-          description: `"${file.name}" exceeds the 5 MB limit (${(file.size / 1024 / 1024).toFixed(1)} MB).`,
-          variant: "destructive",
-        });
+        toast.error("File too large", { description: `"${file.name}" exceeds the 5 MB limit (${(file.size / 1024 / 1024).toFixed(1)} MB).` });
         return;
       }
     }
@@ -65,7 +48,7 @@ const AdminGallery = () => {
       const path = `${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("gallery").upload(path, file);
       if (uploadError) {
-        toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+        toast.error("Upload failed", { description: uploadError.message });
         continue;
       }
       const { error: dbError } = await supabase.from("gallery_images").insert({
@@ -75,10 +58,10 @@ const AdminGallery = () => {
         sort_order: images.length,
       });
       if (dbError) {
-        toast({ title: "Error saving", description: dbError.message, variant: "destructive" });
+        toast.error("Error saving", { description: dbError.message });
       }
     }
-    toast({ title: "Uploaded!" });
+    toast.success("Uploaded!");
     setAlt("");
     if (fileRef.current) fileRef.current.value = "";
     setUploading(false);
@@ -87,13 +70,12 @@ const AdminGallery = () => {
 
   const handleDelete = async (img: GalleryImage) => {
     if (!window.confirm("Are you sure you want to delete this image?")) return;
-    const { error: storageErr } = await supabase.storage.from("gallery").remove([img.storage_path]);
-    if (storageErr) {
-      toast({ title: "Storage error", description: storageErr.message, variant: "destructive" });
+    try {
+      await deleteMutation.mutateAsync(img);
+      toast.success("Deleted");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
     }
-    const { error } = await supabase.from("gallery_images").delete().eq("id", img.id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Deleted" }); fetchImages(); }
   };
 
   return (
@@ -141,10 +123,10 @@ const ImageCard = ({
   onDelete: (img: GalleryImage) => void;
   onAltUpdate: () => void;
 }) => {
-  const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [altValue, setAltValue] = useState(img.alt);
   const inputRef = useRef<HTMLInputElement>(null);
+  const updateMutation = useUpdateGalleryImage();
 
   const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(img.storage_path);
 
@@ -156,13 +138,12 @@ const ImageCard = ({
     const trimmed = altValue.trim();
     if (!trimmed) { setAltValue(img.alt); setEditing(false); return; }
     if (trimmed === img.alt) { setEditing(false); return; }
-    const { error } = await supabase.from("gallery_images").update({ alt: trimmed }).eq("id", img.id);
-    if (error) {
-      toast({ title: "Error saving alt text", description: error.message, variant: "destructive" });
+    try {
+      await updateMutation.mutateAsync({ id: img.id, alt: trimmed });
+      toast.success("Alt text updated");
+    } catch (err: any) {
+      toast.error("Error saving alt text", { description: err.message });
       setAltValue(img.alt);
-    } else {
-      toast({ title: "Alt text updated" });
-      onAltUpdate();
     }
     setEditing(false);
   };

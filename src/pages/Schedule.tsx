@@ -1,39 +1,18 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
-import { Clock, MapPin, CalendarDays, Search, Filter } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Clock, MapPin, CalendarDays, Search, Filter, CalendarPlus } from "lucide-react";
 import SEO from "@/components/SEO";
-
-interface ScheduleEntry {
-  id: string;
-  day: string;
-  time: string;
-  type: string;
-  location: string;
-  category: string;
-  event_date: string | null;
-}
+import { downloadICS } from "@/lib/ics";
+import { useScheduleEntries } from "@/hooks/queries";
 
 const Schedule = () => {
-  const [weekly, setWeekly] = useState<ScheduleEntry[]>([]);
-  const [events, setEvents] = useState<ScheduleEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: entries = [], isLoading: loading } = useScheduleEntries();
   const [dayFilter, setDayFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [eventSearch, setEventSearch] = useState("");
 
-  useEffect(() => {
-    supabase
-      .from("schedule_entries")
-      .select("id, day, time, type, location, category, event_date")
-      .order("sort_order")
-      .then(({ data }) => {
-        const entries = data ?? [];
-        setWeekly(entries.filter(e => e.category === "weekly"));
-        setEvents(entries.filter(e => e.category === "event"));
-        setLoading(false);
-      });
-  }, []);
+  const weekly = useMemo(() => entries.filter(e => e.category === "weekly"), [entries]);
+  const events = useMemo(() => entries.filter(e => e.category === "event"), [entries]);
 
   const days = useMemo(() => [...new Set(weekly.map(w => w.day))], [weekly]);
   const locations = useMemo(() => [...new Set([...weekly, ...events].map(e => e.location))], [weekly, events]);
@@ -132,6 +111,19 @@ const Schedule = () => {
                 <span className="text-sm text-muted-foreground flex items-center gap-1">
                   <MapPin size={12} /> {u.location}
                 </span>
+                {u.event_date && (
+                  <button
+                    onClick={() => {
+                      const d = new Date(u.event_date + "T10:00:00");
+                      const end = new Date(d.getTime() + 3 * 60 * 60 * 1000);
+                      downloadICS({ title: u.type, location: u.location, start: d, end });
+                    }}
+                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition shrink-0"
+                    title="Add to calendar"
+                  >
+                    <CalendarPlus size={14} /> .ics
+                  </button>
+                )}
               </div>
             ))}
           </div>

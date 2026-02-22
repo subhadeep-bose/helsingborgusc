@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, X, Search } from "lucide-react";
 import SEO from "@/components/SEO";
+import { useGalleryImages } from "@/hooks/queries";
 
 // Static fallback images
 import gallery1 from "@/assets/gallery-1.jpg";
@@ -22,29 +23,17 @@ const fallbackImages = [
 ];
 
 const Gallery = () => {
-  const [images, setImages] = useState<{ src: string; alt: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: dbImages, isLoading: loading } = useGalleryImages();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    supabase
-      .from("gallery_images")
-      .select("id, alt, storage_path")
-      .order("sort_order")
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          const mapped = data.map((img) => {
-            const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(img.storage_path);
-            return { src: urlData.publicUrl, alt: img.alt };
-          });
-          setImages(mapped);
-        } else {
-          setImages(fallbackImages);
-        }
-        setLoading(false);
-      });
-  }, []);
+  const images = useMemo(() => {
+    if (!dbImages || dbImages.length === 0) return fallbackImages;
+    return dbImages.map((img) => {
+      const { data: urlData } = supabase.storage.from("gallery").getPublicUrl(img.storage_path);
+      return { src: urlData.publicUrl, alt: img.alt };
+    });
+  }, [dbImages]);
 
   const filtered = search.trim()
     ? images.filter((img) => img.alt.toLowerCase().includes(search.toLowerCase()))

@@ -1,21 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle, ChevronDown, Search, Link2, Link2Off, KeyRound } from "lucide-react";
+import { toast } from "sonner";
+import { Trash2, Shield, ShieldOff, Pencil, X, Check, CheckCircle, XCircle, ChevronDown, Search, Link2, Link2Off, KeyRound, DollarSign } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
-
-interface Member {
-  id: string;
-  first_name: string;
-  last_name: string | null;
-  email: string;
-  phone: string | null;
-  experience_level: string | null;
-  registered_at: string;
-  status: string;
-  user_id: string | null;
-}
+import { useAllMembers, useUpdateMember, useDeleteMember, useUserRoles, useAssignRole, useRemoveRole } from "@/hooks/queries";
+import type { Member } from "@/hooks/queries";
 
 interface UserRole {
   user_id: string;
@@ -24,40 +13,35 @@ interface UserRole {
 
 const AdminMembers = () => {
   const { user, isAdmin } = useAuth();
-  const { toast } = useToast();
-  const [members, setMembers] = useState<Member[]>([]);
-  const [roles, setRoles] = useState<UserRole[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { data: members = [], isLoading: fetching } = useAllMembers(isAdmin);
+  const { data: roles = [] } = useUserRoles(isAdmin);
+  const updateMember = useUpdateMember();
+  const deleteMember = useDeleteMember();
+  const assignRole = useAssignRole();
+  const removeRole = useRemoveRole();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ first_name: "", last_name: "", experience_level: "" });
   const [tab, setTab] = useState<"pending" | "approved" | "rejected">("pending");
-
-  const fetchData = async () => {
-    const [membersRes, rolesRes] = await Promise.all([
-      supabase.from("members").select("id, first_name, last_name, email, phone, experience_level, registered_at, status, user_id").order("registered_at", { ascending: false }),
-      supabase.from("user_roles").select("user_id, role"),
-    ]);
-    setMembers(membersRes.data ?? []);
-    setRoles(rolesRes.data ?? []);
-    setFetching(false);
-  };
-
-  useEffect(() => { if (isAdmin) fetchData(); }, [isAdmin]);
 
   const handleDelete = async (id: string) => {
     const member = members.find(m => m.id === id);
     const name = member ? `${member.first_name} ${member.last_name ?? ""}`.trim() : "this member";
     if (!window.confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
-
-    const { error } = await supabase.from("members").delete().eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Member removed" }); fetchData(); }
+    try {
+      await deleteMember.mutateAsync(id);
+      toast.success("Member removed");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
+    }
   };
 
   const handleStatusChange = async (id: string, status: string) => {
-    const { error } = await supabase.from("members").update({ status }).eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: status === "approved" ? "Member approved!" : "Member rejected" }); fetchData(); }
+    try {
+      await updateMember.mutateAsync({ id, status });
+      toast.success(status === "approved" ? "Member approved!" : "Member rejected");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
+    }
   };
 
   const startEdit = (m: Member) => {
@@ -66,27 +50,37 @@ const AdminMembers = () => {
   };
 
   const saveEdit = async (id: string) => {
-    const { error } = await supabase.from("members").update({
-      first_name: editForm.first_name,
-      last_name: editForm.last_name || null,
-      experience_level: editForm.experience_level || null,
-    }).eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Updated" }); setEditingId(null); fetchData(); }
+    try {
+      await updateMember.mutateAsync({
+        id,
+        first_name: editForm.first_name,
+        last_name: editForm.last_name || null,
+        experience_level: editForm.experience_level || null,
+      });
+      toast.success("Updated");
+      setEditingId(null);
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
+    }
   };
 
-  const assignAdmin = async (userId: string) => {
-    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" as const });
-    if (error) {
-      if (error.code === "23505") toast({ title: "Already an admin" });
-      else toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else { toast({ title: "Admin role assigned" }); fetchData(); }
+  const handleAssignAdmin = async (userId: string) => {
+    try {
+      await assignRole.mutateAsync({ user_id: userId, role: "admin" });
+      toast.success("Admin role assigned");
+    } catch (err: any) {
+      if (err.code === "23505") toast.success("Already an admin");
+      else toast.error("Error", { description: err.message });
+    }
   };
 
-  const removeAdmin = async (userId: string) => {
-    const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Admin role removed" }); fetchData(); }
+  const handleRemoveAdmin = async (userId: string) => {
+    try {
+      await removeRole.mutateAsync({ user_id: userId, role: "admin" });
+      toast.success("Admin role removed");
+    } catch (err: any) {
+      toast.error("Error", { description: err.message });
+    }
   };
 
   const filtered = members.filter(m => m.status === tab);
@@ -104,7 +98,7 @@ const AdminMembers = () => {
           <RoleAssigner
             members={members.filter(m => m.status === "approved")}
             adminUserIds={roles.filter(r => r.role === "admin").map(r => r.user_id)}
-            onAssign={assignAdmin}
+            onAssign={handleAssignAdmin}
           />
           {roles.filter(r => r.role === "admin").length > 0 && (
             <div className="mt-5 space-y-2">
@@ -128,7 +122,7 @@ const AdminMembers = () => {
                     </div>
                     {r.user_id !== user?.id && (
                       <button
-                        onClick={() => removeAdmin(r.user_id)}
+                        onClick={() => handleRemoveAdmin(r.user_id)}
                         className="inline-flex items-center gap-1.5 text-xs font-display tracking-wider uppercase text-destructive hover:bg-destructive/10 px-3 py-1.5 rounded transition"
                         aria-label="Remove admin"
                       >
@@ -177,13 +171,14 @@ const AdminMembers = () => {
                   <th className="text-left px-4 py-3 font-display text-foreground">Email</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Level</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Linked</th>
+                  <th className="text-left px-4 py-3 font-display text-foreground">Fee</th>
                   <th className="text-left px-4 py-3 font-display text-foreground">Applied</th>
                   <th className="text-right px-4 py-3 font-display text-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">No {tab} members.</td></tr>
+                  <tr><td colSpan={7} className="text-center py-8 text-muted-foreground">No {tab} members.</td></tr>
                 )}
                 {filtered.map((m) => (
                   <tr key={m.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition">
@@ -211,6 +206,26 @@ const AdminMembers = () => {
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={async () => {
+                          try {
+                            await updateMember.mutateAsync({ id: m.id, fee_paid: !m.fee_paid });
+                          } catch (err: any) {
+                            toast.error("Error", { description: err.message });
+                          }
+                        }}
+                        className={`text-xs font-display uppercase tracking-wider px-2 py-0.5 rounded transition ${
+                          m.fee_paid
+                            ? "bg-primary/10 text-primary hover:bg-primary/20"
+                            : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                        }`}
+                        title={m.fee_paid ? "Click to mark unpaid" : "Click to mark paid"}
+                      >
+                        <DollarSign size={12} className="inline -mt-0.5 mr-0.5" />
+                        {m.fee_paid ? "Paid" : "Unpaid"}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {new Date(m.registered_at).toLocaleDateString("sv-SE", { year: "numeric", month: "short", day: "numeric" })}

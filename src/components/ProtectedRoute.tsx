@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 
 interface ProtectedRouteProps {
@@ -11,13 +11,12 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
   const { user, isAdmin, loading } = useAuth();
   const location = useLocation();
-  const { toast } = useToast();
   const toasted = useRef(false);
 
   useEffect(() => {
     if (!loading && !user && !toasted.current) {
       toasted.current = true;
-      toast({ title: "Sign in required", description: "Please sign in to access that page." });
+      toast("Sign in required", { description: "Please sign in to access that page." });
     }
   }, [loading, user, toast]);
 

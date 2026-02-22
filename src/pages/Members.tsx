@@ -1,16 +1,8 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import PageHeader from "@/components/PageHeader";
 import { User, Search } from "lucide-react";
 import SEO from "@/components/SEO";
-
-interface Member {
-  id: string;
-  first_name: string;
-  last_name: string | null;
-  experience_level: string | null;
-  registered_at: string;
-}
+import { useApprovedMembers } from "@/hooks/queries";
 
 const experienceLevels = [
   { value: "", label: "All Levels" },
@@ -21,26 +13,9 @@ const experienceLevels = [
 ];
 
 const Members = () => {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: members = [], isLoading: loading } = useApprovedMembers();
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
-
-  useEffect(() => {
-    const fetchMembers = async () => {
-      const { data, error } = await supabase
-        .from("members")
-        .select("id, first_name, last_name, experience_level, registered_at")
-        .eq("status", "approved")
-        .order("registered_at", { ascending: false });
-
-      if (!error && data) {
-        setMembers(data);
-      }
-      setLoading(false);
-    };
-    fetchMembers();
-  }, []);
 
   const formatExperience = (level: string | null) => {
     if (!level) return "Member";

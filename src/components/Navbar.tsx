@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, ChevronDown, Newspaper, Users, LayoutDashboard, Calendar, Image, Mail, Award } from "lucide-react";
+import { Menu, X, LogIn, LogOut, ChevronDown, Newspaper, Users, LayoutDashboard, Calendar, Image, Mail, Award, UserCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -170,6 +170,16 @@ const Navbar = () => {
                   <Award size={11} /> Board
                 </span>
               )}
+              <Link
+                to="/my-profile"
+                className={`px-4 py-2 rounded font-body text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+                  location.pathname === "/my-profile"
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                }`}
+              >
+                <UserCircle size={14} /> My Profile
+              </Link>
               <button
                 onClick={() => signOut()}
                 className="px-4 py-2 rounded font-body text-sm font-medium text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 transition-colors inline-flex items-center gap-1.5"
@@ -255,12 +265,24 @@ const Navbar = () => {
             )}
           </div>
           {user ? (
-            <button
-              onClick={() => signOut()}
-              className="block w-full text-left px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
-            >
-              Sign Out
-            </button>
+            <>
+              <Link
+                to="/my-profile"
+                className={`flex items-center gap-2 px-6 py-3 font-body text-sm transition-colors ${
+                  location.pathname === "/my-profile"
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-primary-foreground/80 hover:bg-primary-foreground/10"
+                }`}
+              >
+                <UserCircle size={14} /> My Profile
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="block w-full text-left px-6 py-3 font-body text-sm text-primary-foreground/80 hover:bg-primary-foreground/10 transition-colors"
+              >
+                Sign Out
+              </button>
+            </>
           ) : (
             <Link
               to="/auth"
