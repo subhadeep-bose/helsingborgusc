@@ -22,6 +22,7 @@ const Footer = () => (
             <Link to="/cricket-live" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">India Cricket Live</Link>
             <Link to="/fun" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Fun Zone</Link>
             <Link to="/check-status" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Check Status</Link>
+            <Link to="/statutes" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Club Statutes</Link>
             <Link to="/privacy" className="text-primary-foreground/70 hover:text-primary-foreground transition-colors">Privacy Policy</Link>
           </div>
         </div>
