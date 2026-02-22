@@ -29,10 +29,10 @@ ALTER TABLE public.members
 ALTER TABLE public.members
   ALTER COLUMN status SET DEFAULT 'pending'::public.member_status;
 
--- Step 5: Recreate the policy using the new enum type
+-- Recreate the policy using the new enum type (with admin override)
 CREATE POLICY "Approved members are publicly viewable"
   ON public.members FOR SELECT
-  USING (status = 'approved'::public.member_status);
+  USING (status = 'approved'::public.member_status OR has_role(auth.uid(), 'admin'));
 
 -- Step 6: Add index on status for faster filtering
 CREATE INDEX IF NOT EXISTS idx_members_status ON public.members(status);
