@@ -7,16 +7,17 @@ export function useClubStats() {
   return useQuery({
     queryKey: queryKeys.clubStats.all,
     queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
       const [membersRes, sessionsRes, matchesRes] = await Promise.all([
         supabase.from("members").select("id", { count: "exact", head: true }).eq("status", "approved"),
         supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "weekly"),
-        supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "event"),
+        supabase.from("schedule_entries").select("id", { count: "exact", head: true }).eq("category", "event").lte("event_date", today),
       ]);
-      const events = matchesRes.count ?? 0;
+      const pastSessions = matchesRes.count ?? 0;
       return {
         members: membersRes.count ?? 0,
         sessions: sessionsRes.count ?? 0,
-        matches: events * 2, // ~2 matches played per session on average
+        matches: pastSessions * 2, // ~2 matches played per past session
       };
     },
   });
