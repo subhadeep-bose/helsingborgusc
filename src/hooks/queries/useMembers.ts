@@ -50,13 +50,13 @@ export function useApprovedMembers() {
   return useQuery({
     queryKey: queryKeys.members.approved,
     queryFn: async () => {
+      // Query the public view that only exposes safe columns (no PII)
       const { data, error } = await supabase
-        .from("members")
+        .from("members_public" as any)
         .select("id, first_name, last_name, experience_level, registered_at")
-        .eq("status", "approved")
         .order("registered_at", { ascending: false });
       if (error) throw error;
-      return data as Pick<Member, "id" | "first_name" | "last_name" | "experience_level" | "registered_at">[];
+      return (data ?? []) as Pick<Member, "id" | "first_name" | "last_name" | "experience_level" | "registered_at">[];
     },
   });
 }
