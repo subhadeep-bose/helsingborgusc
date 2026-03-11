@@ -47,33 +47,6 @@ export type Database = {
         }
         Relationships: []
       }
-      contact_messages: {
-        Row: {
-          id: string
-          name: string
-          email: string
-          subject: string
-          message: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          email: string
-          subject: string
-          message: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          email?: string
-          subject?: string
-          message?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
       board_members: {
         Row: {
           created_at: string
@@ -112,8 +85,35 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "members"
             referencedColumns: ["id"]
-          }
+          },
         ]
+      }
+      contact_messages: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          subject?: string
+        }
+        Relationships: []
       }
       gallery_images: {
         Row: {
@@ -147,6 +147,7 @@ export type Database = {
           date_of_birth: string | null
           email: string
           experience_level: string | null
+          fee_paid: boolean
           first_name: string
           id: string
           last_name: string | null
@@ -162,6 +163,7 @@ export type Database = {
           date_of_birth?: string | null
           email: string
           experience_level?: string | null
+          fee_paid?: boolean
           first_name: string
           id?: string
           last_name?: string | null
@@ -177,6 +179,7 @@ export type Database = {
           date_of_birth?: string | null
           email?: string
           experience_level?: string | null
+          fee_paid?: boolean
           first_name?: string
           id?: string
           last_name?: string | null
@@ -259,12 +262,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_board_member: {
-        Args: {
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      is_board_member: { Args: { _user_id: string }; Returns: boolean }
+      link_user_to_member: { Args: { _member_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
