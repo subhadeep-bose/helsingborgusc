@@ -86,6 +86,13 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "board_members_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contact_messages: {
@@ -252,7 +259,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      members_public: {
+        Row: {
+          experience_level: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          registered_at: string | null
+        }
+        Insert: {
+          experience_level?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          registered_at?: string | null
+        }
+        Update: {
+          experience_level?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          registered_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
