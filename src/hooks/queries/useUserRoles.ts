@@ -25,8 +25,8 @@ export function useUserRoles(enabled = true) {
 export function useAssignRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { user_id: string; role: string }) => {
-      const { error } = await supabase.from("user_roles").insert(payload);
+    mutationFn: async (payload: { user_id: string; role: "admin" | "moderator" | "user" }) => {
+      const { error } = await supabase.from("user_roles").insert([payload]);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.userRoles.all }),
@@ -36,7 +36,7 @@ export function useAssignRole() {
 export function useRemoveRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ user_id, role }: { user_id: string; role: string }) => {
+    mutationFn: async ({ user_id, role }: { user_id: string; role: "admin" | "moderator" | "user" }) => {
       const { error } = await supabase.from("user_roles").delete().eq("user_id", user_id).eq("role", role);
       if (error) throw error;
     },

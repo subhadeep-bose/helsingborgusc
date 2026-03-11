@@ -6,10 +6,6 @@ import AdminLayout from "@/components/AdminLayout";
 import { useAllMembers, useUpdateMember, useDeleteMember, useUserRoles, useAssignRole, useRemoveRole } from "@/hooks/queries";
 import type { Member } from "@/hooks/queries";
 
-interface UserRole {
-  user_id: string;
-  role: string;
-}
 
 const AdminMembers = () => {
   const { user, isAdmin } = useAuth();
