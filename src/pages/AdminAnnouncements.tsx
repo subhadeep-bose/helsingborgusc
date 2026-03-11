@@ -64,7 +64,7 @@ const AdminAnnouncements = () => {
     }
   };
 
-  const startEdit = (a: Announcement) => {
+  const startEdit = (a: typeof announcements[number]) => {
     setEditId(a.id);
     setTitle(a.title);
     setSummary(a.summary);

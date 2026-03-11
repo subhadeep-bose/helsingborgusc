@@ -36,7 +36,7 @@ export function useAssignRole() {
 export function useRemoveRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ user_id, role }: { user_id: string; role: string }) => {
+    mutationFn: async ({ user_id, role }: { user_id: string; role: "admin" | "moderator" | "user" }) => {
       const { error } = await supabase.from("user_roles").delete().eq("user_id", user_id).eq("role", role);
       if (error) throw error;
     },

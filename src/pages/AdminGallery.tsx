@@ -117,11 +117,10 @@ const AdminGallery = () => {
 const ImageCard = ({
   img,
   onDelete,
-  onAltUpdate,
 }: {
   img: GalleryImage;
   onDelete: (img: GalleryImage) => void;
-  onAltUpdate: () => void;
+  onAltUpdate?: () => void;
 }) => {
   const [editing, setEditing] = useState(false);
   const [altValue, setAltValue] = useState(img.alt);

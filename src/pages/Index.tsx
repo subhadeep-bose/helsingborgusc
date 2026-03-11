@@ -24,13 +24,6 @@ const features = [
   },
 ];
 
-interface Announcement {
-  id: string;
-  title: string;
-  summary: string;
-  tag: string;
-  published_at: string;
-}
 
 const Index = () => {
   const { data: news = [] } = useLatestAnnouncements(4);

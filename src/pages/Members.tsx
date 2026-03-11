@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PageHeader from "@/components/PageHeader";
-import { User, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useApprovedMembers } from "@/hooks/queries";
 
