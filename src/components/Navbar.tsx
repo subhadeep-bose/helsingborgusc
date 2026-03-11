@@ -7,16 +7,16 @@ import ThemeToggle from "@/components/ThemeToggle";
 const mainLinks = [
   { to: "/", label: "Home" },
   { to: "/registration", label: "Join Us" },
+  { to: "/members", label: "Members" },
+  { to: "/board", label: "Board" },
   { to: "/schedule", label: "Schedule" },
-  { to: "/cricket-live", label: "India Live" },
 ];
 
 const clubLinks = [
-  { to: "/members", label: "Members" },
-  { to: "/board", label: "Board" },
   { to: "/gallery", label: "Gallery" },
   { to: "/news", label: "News" },
   { to: "/contact", label: "Contact" },
+  { to: "/cricket-live", label: "India Live" },
   { to: "/fun", label: "Fun Zone" },
 ];
 
