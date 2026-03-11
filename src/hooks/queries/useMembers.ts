@@ -56,7 +56,7 @@ export function useApprovedMembers() {
         .select("id, first_name, last_name, experience_level, registered_at")
         .order("registered_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as Pick<Member, "id" | "first_name" | "last_name" | "experience_level" | "registered_at">[];
+      return (data ?? []) as unknown as Pick<Member, "id" | "first_name" | "last_name" | "experience_level" | "registered_at">[];
     },
   });
 }
