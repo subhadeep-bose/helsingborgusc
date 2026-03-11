@@ -10,7 +10,7 @@ import { queryKeys } from "@/hooks/queries/keys";
 import type { GalleryImage } from "@/hooks/queries";
 
 const AdminGallery = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
   const { data: images = [], isLoading: fetching } = useGalleryImages();
   const deleteMutation = useDeleteGalleryImage();
