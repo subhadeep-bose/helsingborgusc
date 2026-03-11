@@ -6,7 +6,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { useScheduleEntries, useCreateScheduleEntry, useUpdateScheduleEntry, useDeleteScheduleEntry } from "@/hooks/queries";
 
 const AdminSchedule = () => {
-  const { } = useAuth();
+  
   const { data: entries = [], isLoading: fetching } = useScheduleEntries();
   const createMutation = useCreateScheduleEntry();
   const updateMutation = useUpdateScheduleEntry();
