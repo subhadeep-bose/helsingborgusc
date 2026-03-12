@@ -77,7 +77,7 @@ export function useToggleRsvp() {
       } else {
         // Add RSVP
         const { error } = await supabase
-          .from("event_rsvps")
+          .from("event_rsvps" as any)
           .insert({ schedule_entry_id: scheduleEntryId, user_id: userId });
         if (error) throw error;
       }
