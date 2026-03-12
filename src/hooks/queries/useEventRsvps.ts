@@ -28,7 +28,7 @@ export function useEventRsvpCounts(entryIds: string[]) {
         .select("id, schedule_entry_id, user_id, created_at")
         .in("schedule_entry_id", entryIds);
       if (error) throw error;
-      return (data ?? []) as EventRsvp[];
+      return (data ?? []) as unknown as EventRsvp[];
     },
     enabled: entryIds.length > 0,
   });
