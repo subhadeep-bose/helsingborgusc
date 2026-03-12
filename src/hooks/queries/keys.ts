@@ -30,4 +30,9 @@ export const queryKeys = {
   nextEvent: {
     all: ["next-event"] as const,
   },
+  eventRsvps: {
+    all: ["event-rsvps"] as const,
+    counts: (entryIds: string[]) => ["event-rsvps", "counts", ...entryIds] as const,
+    mine: (userId: string, entryIds: string[]) => ["event-rsvps", "mine", userId, ...entryIds] as const,
+  },
 };
