@@ -24,7 +24,7 @@ export function useEventRsvpCounts(entryIds: string[]) {
     queryFn: async () => {
       if (entryIds.length === 0) return [] as EventRsvp[];
       const { data, error } = await supabase
-        .from("event_rsvps")
+        .from("event_rsvps" as any)
         .select("id, schedule_entry_id, user_id, created_at")
         .in("schedule_entry_id", entryIds);
       if (error) throw error;
