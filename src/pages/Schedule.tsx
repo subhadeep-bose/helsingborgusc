@@ -1,18 +1,54 @@
 import { useState, useMemo } from "react";
 import PageHeader from "@/components/PageHeader";
-import { Clock, MapPin, CalendarDays, Search, Filter, CalendarPlus } from "lucide-react";
+import { Clock, MapPin, CalendarDays, Search, Filter, CalendarPlus, UserCheck, Users } from "lucide-react";
 import SEO from "@/components/SEO";
 import { downloadICS } from "@/lib/ics";
-import { useScheduleEntries } from "@/hooks/queries";
+import { useScheduleEntries, useEventRsvpCounts, useMyRsvps, useToggleRsvp } from "@/hooks/queries";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const Schedule = () => {
   const { data: entries = [], isLoading: loading } = useScheduleEntries();
+  const { user } = useAuth();
   const [dayFilter, setDayFilter] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [eventSearch, setEventSearch] = useState("");
 
   const weekly = useMemo(() => entries.filter(e => e.category === "weekly"), [entries]);
   const events = useMemo(() => entries.filter(e => e.category === "event"), [entries]);
+  const eventIds = useMemo(() => events.map(e => e.id), [events]);
+
+  const { data: allRsvps = [] } = useEventRsvpCounts(eventIds);
+  const { data: myRsvps = [] } = useMyRsvps(user?.id, eventIds);
+  const toggleRsvp = useToggleRsvp();
+
+  const rsvpCountMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const r of allRsvps) {
+      map[r.schedule_entry_id] = (map[r.schedule_entry_id] ?? 0) + 1;
+    }
+    return map;
+  }, [allRsvps]);
+
+  const myRsvpSet = useMemo(() => new Set(myRsvps.map(r => r.schedule_entry_id)), [myRsvps]);
+
+  const handleToggleRsvp = (entryId: string) => {
+    if (!user) {
+      toast.error("Please log in to RSVP for events.");
+      return;
+    }
+    toggleRsvp.mutate(
+      { scheduleEntryId: entryId, userId: user.id, isRsvped: myRsvpSet.has(entryId) },
+      {
+        onSuccess: () => {
+          toast.success(myRsvpSet.has(entryId) ? "RSVP removed." : "You're in! RSVP confirmed.");
+        },
+        onError: () => {
+          toast.error("Could not update RSVP. Please try again.");
+        },
+      }
+    );
+  };
 
   const days = useMemo(() => [...new Set(weekly.map(w => w.day))], [weekly]);
   const locations = useMemo(() => [...new Set([...weekly, ...events].map(e => e.location))], [weekly, events]);
@@ -97,35 +133,61 @@ const Schedule = () => {
           <p className="text-muted-foreground text-sm">No events match your filters.</p>
         ) : (
           <div className="bg-card border border-border rounded-lg overflow-hidden">
-            {filteredEvents.map((u, i) => (
-              <div
-                key={u.id}
-                className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 px-6 py-4 ${
-                  i !== filteredEvents.length - 1 ? "border-b border-border" : ""
-                }`}
-              >
-                <span className="font-display text-sm gold-accent min-w-[120px]">
-                  {u.event_date ? new Date(u.event_date + "T00:00:00").toLocaleDateString("sv-SE", { month: "short", day: "numeric", year: "numeric" }) : ""}
-                </span>
-                <span className="font-body text-foreground flex-1">{u.type}</span>
-                <span className="text-sm text-muted-foreground flex items-center gap-1">
-                  <MapPin size={12} /> {u.location}
-                </span>
-                {u.event_date && (
+            {filteredEvents.map((u, i) => {
+              const count = rsvpCountMap[u.id] ?? 0;
+              const isRsvped = myRsvpSet.has(u.id);
+
+              return (
+                <div
+                  key={u.id}
+                  className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-6 py-4 ${
+                    i !== filteredEvents.length - 1 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <span className="font-display text-sm gold-accent min-w-[120px]">
+                    {u.event_date ? new Date(u.event_date + "T00:00:00").toLocaleDateString("sv-SE", { month: "short", day: "numeric", year: "numeric" }) : ""}
+                  </span>
+                  <span className="font-body text-foreground flex-1">{u.type}</span>
+                  <span className="text-sm text-muted-foreground flex items-center gap-1">
+                    <MapPin size={12} /> {u.location}
+                  </span>
+
+                  {/* RSVP count */}
+                  <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0" title={`${count} attending`}>
+                    <Users size={13} /> {count}
+                  </span>
+
+                  {/* RSVP toggle button */}
                   <button
-                    onClick={() => {
-                      const d = new Date(u.event_date + "T10:00:00");
-                      const end = new Date(d.getTime() + 3 * 60 * 60 * 1000);
-                      downloadICS({ title: u.type, location: u.location, start: d, end });
-                    }}
-                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition shrink-0"
-                    title="Add to calendar"
+                    onClick={() => handleToggleRsvp(u.id)}
+                    disabled={toggleRsvp.isPending}
+                    className={`text-xs flex items-center gap-1 px-3 py-1.5 rounded-md font-medium transition shrink-0 ${
+                      isRsvped
+                        ? "bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25"
+                        : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    } disabled:opacity-50`}
+                    title={isRsvped ? "Cancel RSVP" : "RSVP to attend"}
                   >
-                    <CalendarPlus size={14} /> .ics
+                    <UserCheck size={13} />
+                    {isRsvped ? "Going" : "RSVP"}
                   </button>
-                )}
-              </div>
-            ))}
+
+                  {u.event_date && (
+                    <button
+                      onClick={() => {
+                        const d = new Date(u.event_date + "T10:00:00");
+                        const end = new Date(d.getTime() + 3 * 60 * 60 * 1000);
+                        downloadICS({ title: u.type, location: u.location, start: d, end });
+                      }}
+                      className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition shrink-0"
+                      title="Add to calendar"
+                    >
+                      <CalendarPlus size={14} /> .ics
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
