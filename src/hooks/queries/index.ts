@@ -22,3 +22,6 @@ export { useClubStats, useNextEvent } from "./useClubStats";
 
 export { useUserRoles, useAssignRole, useRemoveRole } from "./useUserRoles";
 export type { UserRole } from "./useUserRoles";
+
+export { useEventRsvpCounts, useMyRsvps, useToggleRsvp } from "./useEventRsvps";
+export type { EventRsvp, RsvpCount } from "./useEventRsvps";
