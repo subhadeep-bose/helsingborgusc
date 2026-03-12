@@ -46,7 +46,7 @@ export function useMyRsvps(userId: string | undefined, entryIds: string[]) {
         .eq("user_id", userId)
         .in("schedule_entry_id", entryIds);
       if (error) throw error;
-      return (data ?? []) as EventRsvp[];
+      return (data ?? []) as unknown as EventRsvp[];
     },
     enabled: !!userId && entryIds.length > 0,
   });
