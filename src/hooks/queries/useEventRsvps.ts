@@ -69,7 +69,7 @@ export function useToggleRsvp() {
       if (isRsvped) {
         // Remove RSVP
         const { error } = await supabase
-          .from("event_rsvps")
+          .from("event_rsvps" as any)
           .delete()
           .eq("schedule_entry_id", scheduleEntryId)
           .eq("user_id", userId);
