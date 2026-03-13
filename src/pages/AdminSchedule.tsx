@@ -1,12 +1,36 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import { toast } from "sonner";
-import { Trash2, Plus, Pencil } from "lucide-react";
+import { Trash2, Plus, Pencil, ChevronDown, ChevronUp, Users } from "lucide-react";
 import AdminLayout from "@/components/AdminLayout";
-import { useScheduleEntries, useCreateScheduleEntry, useUpdateScheduleEntry, useDeleteScheduleEntry } from "@/hooks/queries";
+import { useScheduleEntries, useCreateScheduleEntry, useUpdateScheduleEntry, useDeleteScheduleEntry, useEventRsvpCounts } from "@/hooks/queries";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+
+/** Fetch member names for a list of user IDs */
+function useRsvpAttendeeNames(userIds: string[]) {
+  return useQuery({
+    queryKey: ["rsvp-attendee-names", ...userIds],
+    queryFn: async () => {
+      if (userIds.length === 0) return {} as Record<string, string>;
+      const { data, error } = await supabase
+        .from("members")
+        .select("user_id, first_name, last_name, email")
+        .in("user_id", userIds);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const m of data ?? []) {
+        if (m.user_id) {
+          map[m.user_id] = [m.first_name, m.last_name].filter(Boolean).join(" ") || m.email;
+        }
+      }
+      return map;
+    },
+    enabled: userIds.length > 0,
+  });
+}
 
 const AdminSchedule = () => {
-  
   const { data: entries = [], isLoading: fetching } = useScheduleEntries();
   const createMutation = useCreateScheduleEntry();
   const updateMutation = useUpdateScheduleEntry();
@@ -14,7 +38,26 @@ const AdminSchedule = () => {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState({ day: "", time: "", type: "", location: "", category: "weekly", event_date: "", sort_order: 0 });
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
   const submitting = createMutation.isPending || updateMutation.isPending;
+
+  const events = useMemo(() => entries.filter(e => e.category === "event"), [entries]);
+  const weekly = useMemo(() => entries.filter(e => e.category === "weekly"), [entries]);
+  const eventIds = useMemo(() => events.map(e => e.id), [events]);
+
+  const { data: allRsvps = [] } = useEventRsvpCounts(eventIds);
+
+  const rsvpsByEvent = useMemo(() => {
+    const map: Record<string, { user_id: string; created_at: string }[]> = {};
+    for (const r of allRsvps) {
+      if (!map[r.schedule_entry_id]) map[r.schedule_entry_id] = [];
+      map[r.schedule_entry_id].push({ user_id: r.user_id, created_at: r.created_at });
+    }
+    return map;
+  }, [allRsvps]);
+
+  const allUserIds = useMemo(() => [...new Set(allRsvps.map(r => r.user_id))], [allRsvps]);
+  const { data: nameMap = {} } = useRsvpAttendeeNames(allUserIds);
 
   const resetForm = () => {
     setForm({ day: "", time: "", type: "", location: "", category: "weekly", event_date: "", sort_order: 0 });
@@ -66,9 +109,6 @@ const AdminSchedule = () => {
     setForm({ day: e.day, time: e.time, type: e.type, location: e.location, category: e.category, event_date: e.event_date ?? "", sort_order: e.sort_order });
     setShowForm(true);
   };
-
-  const weekly = entries.filter(e => e.category === "weekly");
-  const events = entries.filter(e => e.category === "event");
 
   return (
     <AdminLayout
@@ -153,18 +193,53 @@ const AdminSchedule = () => {
         <h2 className="font-display text-xl text-foreground mb-4">Upcoming Events</h2>
         <div className="space-y-3">
           {events.length === 0 && <p className="text-muted-foreground text-center py-4">No events.</p>}
-          {events.map(e => (
-            <div key={e.id} className="bg-card border border-border rounded-lg p-4 flex items-center justify-between gap-4">
-              <div>
-                <p className="font-display text-foreground">{e.type}</p>
-                <p className="text-sm text-muted-foreground">{e.event_date} · {e.location}</p>
+          {events.map(e => {
+            const attendees = rsvpsByEvent[e.id] ?? [];
+            const count = attendees.length;
+            const isExpanded = expandedEvent === e.id;
+
+            return (
+              <div key={e.id} className="bg-card border border-border rounded-lg overflow-hidden">
+                <div className="p-4 flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display text-foreground">{e.type}</p>
+                    <p className="text-sm text-muted-foreground">{e.event_date} · {e.location}</p>
+                  </div>
+                  <button
+                    onClick={() => setExpandedEvent(isExpanded ? null : e.id)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground px-2.5 py-1.5 rounded-md hover:bg-muted transition shrink-0"
+                    title={`${count} attendee(s)`}
+                  >
+                    <Users size={14} />
+                    <span>{count}</span>
+                    {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => startEdit(e)} className="p-2 rounded hover:bg-muted transition"><Pencil size={16} className="text-muted-foreground" /></button>
+                    <button onClick={() => handleDelete(e.id)} className="p-2 rounded hover:bg-destructive/10 transition"><Trash2 size={16} className="text-destructive" /></button>
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="border-t border-border bg-muted/30 px-4 py-3">
+                    {count === 0 ? (
+                      <p className="text-sm text-muted-foreground">No RSVPs yet.</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {attendees.map((a, i) => (
+                          <li key={i} className="flex items-center justify-between text-sm">
+                            <span className="text-foreground">{nameMap[a.user_id] ?? a.user_id}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(a.created_at).toLocaleDateString("sv-SE")}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="flex gap-2 shrink-0">
-                <button onClick={() => startEdit(e)} className="p-2 rounded hover:bg-muted transition"><Pencil size={16} className="text-muted-foreground" /></button>
-                <button onClick={() => handleDelete(e.id)} className="p-2 rounded hover:bg-destructive/10 transition"><Trash2 size={16} className="text-destructive" /></button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
     </AdminLayout>
   );
