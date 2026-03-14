@@ -1,9 +1,13 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import PageHeader from "@/components/PageHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronLeft, ChevronRight, X, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Search, Upload, ImagePlus } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useGalleryImages } from "@/hooks/queries";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/keys";
 
 // Static fallback images
 import gallery1 from "@/assets/gallery-1.jpg";
@@ -22,8 +26,12 @@ const fallbackImages = [
   { src: gallery6, alt: "Stumps at sunset" },
 ];
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
 const Gallery = () => {
   const { data: dbImages, isLoading: loading } = useGalleryImages();
+  const { user } = useAuth();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [search, setSearch] = useState("");
 
@@ -49,7 +57,6 @@ const Gallery = () => {
     if (lightboxIndex !== null) setLightboxIndex((lightboxIndex - 1 + filtered.length) % filtered.length);
   }, [lightboxIndex, filtered.length]);
 
-  // Keyboard navigation
   useEffect(() => {
     if (lightboxIndex === null) return;
     const handler = (e: KeyboardEvent) => {
@@ -61,7 +68,6 @@ const Gallery = () => {
     return () => document.removeEventListener("keydown", handler);
   }, [lightboxIndex, goNext, goPrev, closeLightbox]);
 
-  // Prevent body scroll when lightbox is open
   useEffect(() => {
     if (lightboxIndex !== null) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
@@ -73,6 +79,9 @@ const Gallery = () => {
       <SEO title="Gallery" description="Photos and moments from Helsingborg United Sports Club." path="/gallery" />
       <PageHeader title="Gallery" subtitle="Moments from the pitch" />
       <div className="container mx-auto px-4 py-16">
+        {/* Member upload section */}
+        {user && <MemberUploadForm userId={user.id} />}
+
         {/* Search filter */}
         <div className="max-w-md mx-auto mb-8">
           <div className="flex items-center gap-2 rounded-lg border border-input bg-background px-3 py-2">
@@ -140,6 +149,116 @@ const Gallery = () => {
             </button>
           )}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-sm text-center max-w-lg px-4">{filtered[lightboxIndex].alt}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ───── Member Upload Form ───── */
+const MemberUploadForm = ({ userId }: { userId: string }) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [alt, setAlt] = useState("");
+  const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleUpload = async () => {
+    const files = fileRef.current?.files;
+    if (!files || files.length === 0) {
+      toast.error("Please select a file");
+      return;
+    }
+
+    for (const file of Array.from(files)) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        toast.error("Invalid file type", { description: `"${file.name}" — use JPEG, PNG, WebP, or GIF.` });
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error("File too large", { description: `"${file.name}" exceeds the 5 MB limit.` });
+        return;
+      }
+    }
+
+    setUploading(true);
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop();
+      const path = `${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("gallery").upload(path, file);
+      if (uploadError) {
+        toast.error("Upload failed", { description: uploadError.message });
+        continue;
+      }
+      const { error: dbError } = await supabase.from("gallery_images").insert({
+        storage_path: path,
+        alt: alt.trim() || file.name,
+        uploaded_by: userId,
+        sort_order: 0,
+        status: "pending",
+      } as any);
+      if (dbError) {
+        toast.error("Error saving", { description: dbError.message });
+      }
+    }
+    toast.success("Photo submitted for review!", { description: "An admin will approve it shortly." });
+    setAlt("");
+    if (fileRef.current) fileRef.current.value = "";
+    setUploading(false);
+    setOpen(false);
+    queryClient.invalidateQueries({ queryKey: queryKeys.galleryImages.pending });
+  };
+
+  return (
+    <div className="max-w-md mx-auto mb-8">
+      {!open ? (
+        <button
+          onClick={() => setOpen(true)}
+          className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-sm font-medium text-primary hover:bg-primary/10 transition"
+        >
+          <ImagePlus size={18} /> Share a photo
+        </button>
+      ) : (
+        <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+          <h3 className="font-display text-base text-foreground flex items-center gap-2">
+            <ImagePlus size={18} /> Share a Photo
+          </h3>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">Description</label>
+            <input
+              value={alt}
+              onChange={(e) => setAlt(e.target.value)}
+              placeholder="Describe the photo…"
+              maxLength={200}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">Image</label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple
+              className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:brightness-110"
+            />
+            <p className="text-xs text-muted-foreground mt-1">JPEG, PNG, WebP or GIF — max 5 MB. Photos are reviewed before appearing.</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleUpload}
+              disabled={uploading}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-display text-sm tracking-wider uppercase px-5 py-2 rounded hover:brightness-110 transition disabled:opacity-50"
+            >
+              <Upload size={16} /> {uploading ? "Uploading…" : "Submit"}
+            </button>
+            <button
+              onClick={() => setOpen(false)}
+              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </div>
