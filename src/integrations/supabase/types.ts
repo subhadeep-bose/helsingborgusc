@@ -157,6 +157,7 @@ export type Database = {
           created_at: string
           id: string
           sort_order: number | null
+          status: Database["public"]["Enums"]["gallery_image_status"]
           storage_path: string
           uploaded_by: string | null
         }
@@ -165,6 +166,7 @@ export type Database = {
           created_at?: string
           id?: string
           sort_order?: number | null
+          status?: Database["public"]["Enums"]["gallery_image_status"]
           storage_path: string
           uploaded_by?: string | null
         }
@@ -173,6 +175,7 @@ export type Database = {
           created_at?: string
           id?: string
           sort_order?: number | null
+          status?: Database["public"]["Enums"]["gallery_image_status"]
           storage_path?: string
           uploaded_by?: string | null
         }
@@ -326,6 +329,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      gallery_image_status: "pending" | "approved" | "rejected"
       member_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -455,6 +459,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      gallery_image_status: ["pending", "approved", "rejected"],
       member_status: ["pending", "approved", "rejected"],
     },
   },
