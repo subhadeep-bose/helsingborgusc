@@ -12,7 +12,7 @@ export type { Member, MemberProfile } from "./useMembers";
 export { useScheduleEntries, useCreateScheduleEntry, useUpdateScheduleEntry, useDeleteScheduleEntry } from "./useScheduleEntries";
 export type { ScheduleEntry } from "./useScheduleEntries";
 
-export { useGalleryImages, useCreateGalleryImage, useUpdateGalleryImage, useDeleteGalleryImage } from "./useGalleryImages";
+export { useGalleryImages, usePendingGalleryImages, useCreateGalleryImage, useUpdateGalleryImage, useDeleteGalleryImage } from "./useGalleryImages";
 export type { GalleryImage } from "./useGalleryImages";
 
 export { useContactMessages, useDeleteContactMessage } from "./useContactMessages";

@@ -17,6 +17,7 @@ export const queryKeys = {
   },
   galleryImages: {
     all: ["gallery-images"] as const,
+    pending: ["gallery-images", "pending"] as const,
   },
   contactMessages: {
     all: ["contact-messages"] as const,
