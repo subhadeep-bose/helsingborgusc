@@ -202,6 +202,10 @@ const MemberUploadForm = ({ userId }: { userId: string }) => {
       }
     }
     toast.success("Photo submitted for review!", { description: "An admin will approve it shortly." });
+    // Notify admins (fire-and-forget)
+    supabase.functions.invoke("notify-gallery", {
+      body: { alt: alt.trim() || "Untitled photo", uploaderName: undefined },
+    }).catch(() => {});
     setAlt("");
     if (fileRef.current) fileRef.current.value = "";
     setUploading(false);
